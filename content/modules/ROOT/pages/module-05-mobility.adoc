@@ -1,0 +1,100 @@
+= App Mobility
+
+== 1. Introduction
+
+_In this exercise you will restore an OpenShift Virtual Machine to an alternate cluster from a Kasten backup._
+
+____
+[!CAUTION]
+
+This exercise should be completed by the `cluster-1` user *_ONLY_*.
+____
+
+== 2. Creating an Import Policy
+
+Unlike the "Snapshot" policy created in a previous exercise, an "Import" policy is used to import Kasten RestorePoints to a different cluster.
+
+. In the *_Kasten Dashboard_*, select `cluster-1` from the multi-cluster dropdown menu and select *_Policies → Policies_* from the sidebar.
+. Under your `kasten-lab-backup` Policy, click *_Show import details..._*.
++
+image::module-05-mobility/1.png[]
+
+. Click *_Copy to Clipboard_* to copy the migration token.
+Save this value to be used in an upcoming step.
++
+image::module-05-mobility/2.png[]
+
+. Select `cluster-2` from the multi-cluster dropdown menu and select *_Policies → Policies_* from the sidebar.
+. Click *_+ New Policy_* and fill out the following fields:
++
+|===
+|  |
+
+| *_Name_*
+| `kasten-lab-import`
+
+| *_Action_*
+| Select *_Import_*
+
+| *_Restore After Import_*
+| Click to enable
+
+| *_Import Frequency_*
+| Select *_On-Demand_*
+
+| *_Config Data for Import_*
+| Paste the migration token
+
+| *_Profile for Import_*
+| Select `global-profile-example`
+|===
++
+image::module-05-mobility/3.png[]
++
+image::module-05-mobility/3b.png[]
++
+____
+[!CAUTION]
+
+Ensure `global-profile-example` is selected, not `ceph-rgw-immutable` - this is because `global-profile-example` points to the backup repository on `cluster-1`, whereas the `ceph-rgw-immutable` profile on `cluster-2` points to its own, local Ceph bucket.
+____
+
+. Click *_Create Policy_*.
+. Under the new `kasten-lab-import` Policy, click *_Run Once → Yes_* to initiate importing `kasten-lab` RestorePoints.
++
+image::module-05-mobility/4.png[]
+
+. Return to *_Dashboard_* in the sidebar and select the `kasten-lab-import` Policy Run under *_Actions_* to monitor status.
++
+image::module-05-mobility/5.png[]
++
+Once the Import completes, you should observe the Restore action start immediately, using the most recent `kasten-lab` RestorePoint.
+
+. Once the restore completes, open *_OpenShift Console → Virtualization → Virtual Machines_* on `cluster-2`.
++
+image::module-05-mobility/6.png[]
++
+You should observe the `fedora-k10` VM from `cluster-1` running in the `kasten-lab` namespace (in addition to the `fedora-k10` VM cloned in a previous lab exercise).
+
+== 3. Advanced Options
+
+____
+_What if you want to automate restoring the most recent backup to a standby cluster for DR or test/dev purposes?_
+____
+
+Simply update the `kasten-lab-import` Policy's frequency from *_On-Demand_* to the desired frequency (e.g.
+Hourly, Daily, etc.).
+
+____
+_What if you need to make changes such as targeting an alternate StorageClass for restore or modifying the Route hostname?_
+____
+
+Kasten provides a robust transformation engine, allowing you to test, add, delete, copy, or replace key value pairs in a resource's manifest.
+
+Check out the video below to see an example of creating and applying transforms to an application migrating from an on-premises OpenShift cluster to a ROSA cluster:+++<iframe width="847" height="476" src="https://www.youtube.com/embed/qocZk5fdxsY" title="Scaling Restore Operations with K10 Transform Sets" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="">++++++</iframe>+++
+
+== 4. Takeaways
+
+* Kasten backups can be restored to different clusters using Import policies
+* Import policies can automate restore from the latest backup for use in DR or test/dev environments
+* Transforms can be used to alter manifest specifications to aide in moving workloads between different clusters, storage, or clouds

@@ -1,0 +1,19 @@
+---
+name: modules
+title: Lab 15 - Backup/DR with Veeam Kasten K10
+version: master
+nav:
+- modules/ROOT/nav.adoc
+
+asciidoc:
+  attributes:
+    lab_name: Lab 15 - Backup/DR with Veeam Kasten K10
+    release-version: master
+    page-pagination: true
+  page-links:
+  - url: https://redhat.com
+    text: Red Hat
+
+  extensions:
+  - ./content/lib/tab-block.js
+  - ./content/lib/remote-include-processor.js

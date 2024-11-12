@@ -1,0 +1,245 @@
+= Kasten Multi-Cluster
+
+== 1. Introduction
+
+Each Veeam Kasten deployment can function completely independent of other instances, without dependence on a separate customer-hosted or SaaS control plane - making it ideal for GitOps-style management and use in fully airgapped environments.
+However, Kasten also provides a user interface for providing consolidated observability and centralized management of globally configured Kasten resources - *_Kasten Multi-cluster Manager_*.
+
+'''
+
+_In this exercise you will configure Kasten Multi-cluster Manager, join a second cluster, and distribute a centrally managed location profile to both clusters._
+
+____
+[!IMPORTANT]
+
+As each learner only has a single cluster, you will need to work with a partner, designating (1) user/cluster as `cluster-1` and (1) user/cluster as `cluster-2`.*
+____
+
+== 2. Configuring Primary Cluster
+
+____
+[!CAUTION]
+
+This section should be completed by the `cluster-1` user *_ONLY_*.
+____
+
+The *_Primary_* cluster defines and stores all global resources, such as Policies and Profiles, and also https://docs.kasten.io/latest/operating/monitoring.html#k10-multi-cluster-metrics[aggregates a subset of cluster metrics] for centralized reporting.
+
+. In the *_Kasten Dashboard_*, select *_Multi-Cluster_* from the sidebar.
+. Under *_Promote to Primary_*, click *_Setup_*.
++
+image::module-04-multicluster/02.png[]
+
+. Specify `cluster-1` as the *_Primary Name_* and click *_Promote Cluster → Confirm_*.
++
+image::module-04-multicluster/03.png[]
++
+After setup completes, you should see the *_Multi-cluster Manager_* view.
++
+image::module-04-multicluster/04.png[]
++
+____
+[!NOTE]
+
+A Kasten cluster can also be promoted to the primary cluster role declaratively using Helm/Operand parameters.
+See https://docs.kasten.io/latest/multicluster/tutorials/getting_started.html#setting-up-the-primary-cluster-using-helm[docs.kasten.io] for details.
+____
+
+. Select *_Join Tokens_* from the sidebar and click *_+ Create New Join Token_*.
++
+image::module-04-multicluster/05.png[]
+
+. Specify `lab-token` as the *_Name_* and click *_Confirm_*.
++
+image::module-04-multicluster/06.png[]
++
+____
+[!NOTE]
+
+Join Tokens are a type of Kubernetes Secret that can be created declaratively.
+See https://docs.kasten.io/latest/multicluster/tutorials/getting_started.html#join-tokens[docs.kasten.io] for examples.
+
+A single token can be used for multiple clusters.
+Deleting tokens has no impact on clusters that have already joined multi-cluster, but will prevent additional clusters from joining using the deleted token.
+____
+
+. Click *_Copy_* to copy the token value to the clipboard and send the value to your `cluster-2` partner via one of the following:
+ ** Email/Slack/etc.
+ ** Slowly reading it aloud 😡
+ ** Carrier pigeon 🪶
+ ** Writing it down on a Post-It and burning it after use 🤷‍♂️
+ ** Probably stick with Email/Slack/etc.
+👍
+ ** In real life, token values could be distributed to clusters using any Kubernetes Secrets management solution (ex.
+Vault + External Secrets Operator)
+. Click *_Done_*.
+
+== 3. Joining Multi-Cluster from Secondary
+
+____
+[!CAUTION]
+
+This section should be completed by the `cluster-2` user *_ONLY_*.
+____
+
+. In the *_Kasten Dashboard_*, select *_Multi-Cluster_* from the sidebar.
+. Under *_Join a Multi-Cluster System_*, click *_Join_*.
++
+image::module-04-multicluster/07.png[]
+
+. Paste the `lab-token` value from the primary cluster into the *_Token_* field.
++
+____
+[!NOTE]
+
+The join token also encodes the Kasten ingress URL required for a secondary to reach the primary cluster.
+If an alternate URL is required in a production environment, this value can be overridden as seen in the UI.
+____
+
+. Specify `cluster-2` as the *_Local Cluster Name_* and click *_Use Current_* to populate *_Local Cluster Ingress_* with the current Kasten Route value.
++
+image::module-04-multicluster/08.png[]
+
+. Click *_Connect → Yes_* to join `cluster-2`.
++
+After a few moments you should observe the Multi-Cluster status page indicating the cluster has been connected to `cluster-1` as a primary.
++
+image::module-04-multicluster/09.png[]
++
+____
+[!TIP]
+
+Joining secondary clusters can also be automated as part of a GitOps-style deployment by creating a `mc-join` Secret and `mc-join-config` ConfigMap on the secondary cluster to provide the join token and name/ingress details.
+See https://docs.kasten.io/latest/multicluster/tutorials/getting_started.html#adding-a-secondary-cluster[docs.kasten.io] for details.
+____
+
+== 4. Managing Global Resources
+
+____
+[!CAUTION]
+
+This section should be completed by the `cluster-1` user *_ONLY_*.
+____
+
+. In the `cluster-1` *_Kasten Dashboard_*, select *_Multi-Cluster Manager_* from the dropdown menu and validate the *_Clusters_* page now displays both clusters.
++
+image::module-04-multicluster/10.png[]
+
+. Click the *_Grant Permissions_* button to configure permissions for the current *_Kasten Dashboard_* user.
++
+This will pre-fill a form to extend the `k10-multi-cluster-admin` ClusterRole to the current user for all current and future Kasten clusters.
++
+image::module-04-multicluster/11.png[]
++
+____
+[!NOTE]
+
+In a production environment this can be modified to give granular control over a subset of clusters to different users or groups.
+____
+
+. Keep the default settings and click *_Save_*.
+. Select *_Clusters_* from the sidebar and click into `cluster-2` to validate it is accessible.
+The sidebar dropdown menu can be used to browse between available clusters and the *_Multi-Cluster Manager_*.
++
+image::module-04-multicluster/12.png[]
+
+. In *_Kasten Multi-Cluster Manager_*, select *_Global Profiles → Location_* from the sidebar and click *_+ New Profile_*.
++
+image::module-04-multicluster/13.png[]
+
+. Fill out the following fields and click *_Next_*:
++
+|===
+|  |
+
+| *_Profile Name_*
+| `global-profile-example`
+
+| *_Storage Provider_*
+| S3 Compatible
+|===
+
+. In the *_Web Terminal_*, run the following to fetch your existing Ceph Object Gateway bucket details:
++
+[,bash]
+----
+ export CEPH_S3_ENDPOINT="https://$(oc get route \
+   s3-route -n openshift-storage -o jsonpath='{.spec.host}')"
+ export AWS_ACCESS_KEY_ID=$(oc get secret \
+   rook-ceph-object-user-ocs-storagecluster-cephobjectstore-ocs-storagecluster-cephobjectstoreuser \
+   -n openshift-storage -o jsonpath='{.data.AccessKey}' | base64 --decode)
+ export AWS_SECRET_ACCESS_KEY=$(oc get secret \
+   rook-ceph-object-user-ocs-storagecluster-cephobjectstore-ocs-storagecluster-cephobjectstoreuser \
+   -n openshift-storage -o jsonpath='{.data.SecretKey}' | base64 --decode)
+
+ printf '%s\n' 'ACCESS KEY:' ${AWS_ACCESS_KEY_ID} 'SECRET KEY:' ${AWS_SECRET_ACCESS_KEY} 'ENDPOINT:' ${CEPH_S3_ENDPOINT}
+----
+
+. Return to the *_Kasten Multi-Cluster Manager_* and fill out the following fields:
++
+|===
+|  |
+
+| *_S3 Access Key_*
+| Paste `ACCESS KEY` value
+
+| *_S3 Secret_*
+| Paste `SECRET KEY` value
+
+| *_Endpoint_*
+| Paste `ENDPOINT` value
+
+| *_Region_*
+| `us-east-1`
+
+| *_Bucket_*
+| `kasten`
+|===
++
+image::module-04-multicluster/14.png[]
+
+. Click *_Next → Submit_*.
+. Select *_Distributions_* from the sidebar and click *_+ New Distribution_*.
++
+Distributions define which global resources should be synced with which clusters, allowing administrators to define label-based rules to automate resource distribution for new Kasten installs joining multi-cluster.
+
+. Fill out the following fields:
++
+|===
+|  |
+
+| *_Name_*
+| `example-distribution`
+
+| *_Clusters_*
+| Select `dist.kio.kasten.io/cluster-type:primary`
+
+|
+| Select `dist.kio.kasten.io/cluster-type:secondary`
+
+| *_Resources_*
+| Select `global-profile-example`
+|===
++
+image::module-04-multicluster/15.png[]
++
+This configuration will ensure the `global-profile-example` Location Profile is synced to all current and future Kasten clusters.
+
+. Click *_Add Distribution_*.
++
+You should observe that the distribution has been synced to the selected clusters.
++
+image::module-04-multicluster/16.png[]
++
+____
+[!TIP]
+
+You can view a summary of global resources for each cluster from the *_Multi-Cluster_* status page as shown below.
+
+image::module-04-multicluster/17.png[]
+____
+
+== 5. Takeaways
+
+* Kasten Multi-Cluster Manager provides an interface for administrators to manage many Kasten deployments from a single interface
+* Kasten policies and profiles can be centrally defined to simplify change management and ensure consistency across large environments
