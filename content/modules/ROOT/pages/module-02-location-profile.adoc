@@ -55,7 +55,8 @@ If this is the first time you are opening a terminal you may need to *Create a P
 +
 [source,bash,role=execute,subs="attributes"]
 ----
-oc get secret -n backuptarget-{user} kastenbackups -ojsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 --decode && echo
+oc get secret -n backuptarget-{user} kastenbackups \
+  -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 --decode && echo
 ----
 +
 Copy the Access Key to a text editor as it will be needed again shortly
@@ -64,7 +65,8 @@ Copy the Access Key to a text editor as it will be needed again shortly
 +
 [source,bash,role=execute,subs="attributes"]
 ----
-oc get secret -n backuptarget-{user} kastenbackups -ojsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 --decode && echo
+oc get secret -n backuptarget-{user} kastenbackups \
+ -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 --decode && echo
 ----
 +
 Copy the Secret Key to a text editor as it will be needed again shortly.

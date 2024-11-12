@@ -12,7 +12,7 @@ Fist you will create a new VM in a new project to use for the exercise.
 +
 image::module-03-backup-restore/01.png[]
 
-. Specify `kasten-lab` as the *_Name_* and click *_Create_*.
+. Specify `kasten-lab-{user}` as the *_Name_* and click *_Create_*.
 . Select *_Virtualization → Virtual Machines_* from the sidebar, and click *_Create VirtualMachine → From template_* in the `kasten-lab` Project.
 +
 image::module-03-backup-restore/03.png[]

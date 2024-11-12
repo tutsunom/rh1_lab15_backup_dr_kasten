@@ -24,7 +24,7 @@ Within the cluster, Kasten communicates with the Kubernetes API server to discov
 We have pre-staged the lab with an install of Veeam Kasten, so there's no need to complete the steps in Section 2.
 Rather, this section just highlights how'd you go about installing Kasten if it were not already installed on the OpenShift cluster.
 
-Make sure you follow the instructions to access the Kasten K10 Dashboard in section 3 though!
+Make sure you follow the instructions to access the Kasten K10 Dashboard in section 3 of this lab though!
 ====
 
 == 2. Installing Kasten
