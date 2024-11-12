@@ -113,7 +113,7 @@ image::module-02-location-profile/02.png[]
 | `{kasten_backup_bucket_host}`
 
 | *_Skip certificate chain and hostname verification_*
-| Checked
+| `Checked`
 
 | *_Region_*
 | `us-east-1`
