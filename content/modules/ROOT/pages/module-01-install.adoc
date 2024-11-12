@@ -98,7 +98,7 @@ This configuration will enable integration with the built-in OpenShift OAuth ser
 ====
 [NOTE]
 
-A complete list of configuration parameters is https://docs.kasten.io/latest/install/advanced.html#complete-list-of-k10-helm-options[available on docs.kasten.io].
+A complete list of configuration parameters is available on https://docs.kasten.io/latest/install/advanced.html#complete-list-of-k10-helm-options[docs.kasten.io].
 ====
 
 . Click *_Create_*.
@@ -140,7 +140,7 @@ The `k10.kasten.io/is-snapshot-class` annotation is used by Kasten to determine 
 
 == 3. Accessing the Kasten Dashboard
 
-. In a web browser navigate to the {kasten_dashboard}[^Kasten Dashboard].
+. In a web browser navigate to the {kasten_dashboard}[Kasten Dashboard^].
 You should be redirected to the OpenShift OAuth login prompt.
 
 . Use your OpenShift Console credentials provided as part of your lab environment and click *_Log-in_*.
