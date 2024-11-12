@@ -1,4 +1,4 @@
-Welcome to Lab 15 - Backup/DR with Veeam Kasten K10!
+= Welcome to Lab 15 - Backup/DR with Veeam Kasten K10!
 
 == Introduction
 

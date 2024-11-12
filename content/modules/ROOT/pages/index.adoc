@@ -1,8 +1,5 @@
 = Welcome to {lab_name}!
 
-[%hardbreaks]
-Welcome to Lab 15 - Backup/DR with Veeam Kasten K10!
-
 == Introduction
 
 This repository hosts the lab guide for Lab 15 - Backup/DR with Veeam Kasten K10 at 2025 Red Hat One.
