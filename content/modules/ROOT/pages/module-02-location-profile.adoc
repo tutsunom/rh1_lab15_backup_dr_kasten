@@ -2,7 +2,7 @@
 
 == 1. Introduction
 
-You've now configured everything required to perform a local snapshot of a Kubernetes application using Kasten - _but snapshots are not backup!_ In order to restore in the event the local cluster or primary storage is compromised, a copy of that data should be exported to another location.
+You have now configured everything required to perform a local snapshot of a Kubernetes application using Kasten - _but snapshots are not backup!_ In order to restore in the event the local cluster or primary storage is compromised, a copy of that data should be exported to another location.
 
 The configuration of these backup targets are called *_Location Profiles_*.
 Kasten https://docs.kasten.io/latest/usage/configuration.html[supports several options], including:
@@ -27,48 +27,53 @@ Ceph, MinIO, Wasabi, etc.)
 
 _In this exercise, you will configure an immutable bucket using the on-cluster Ceph Object Gateway deployment and add the bucket as a Location Profile in Kasten._
 
-____
-[!CAUTION]
+====
+[CAUTION]
 
 In a real world environment you should never back up data to the same infrastructure you are intending to protect - using on-cluster storage as a backup target is performed in the lab solely to simplify lab staging and instructions.
-____
+====
 
 == 2. Configuring an Object Bucket Claim to Store Backups
 
-____
-[!CAUTION]
+====
+[CAUTION]
 
-Kasten supports immutable object storage and it is recommended to protect backups against accidental deletion or ransomware attack.
-For this lab, we won't    configure immutability as it
-____
+Kasten supports immutable object storage and it is recommended to protect backups against accidental deletion or ransomware attack. For this lab, we won't configure immutability as it requires elevated permissions.
+====
 
 . Open an OpenShift command line terminal
 +
 image::module-02-location-profile/002.png[]
++
+====
+[NOTE]
+
+If this is the first time you are opening a terminal you may need to *Create a Project* first to run your terminal pod in. In that case make sure you use `terminal-{user}` as your project name to ensure that it is unique to you.
+====
 
 . Run the following command to retrieve the Access Key for the Multicloud Object Gateway:
 +
-[,bash]
+[source,bash]
 ----
- oc get secret -n backuptarget kastenbackups -ojsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 --decode && echo
+oc get secret -n backuptarget kastenbackups -ojsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 --decode && echo
 ----
 +
 Copy the Access Key to a text editor as it will be needed again shortly
 
 . Run the following command to retrieve the Secret Key for the Multicloud Object Gateway:
 +
-[,bash]
+[source,bash]
 ----
- oc get secret -n backuptarget kastenbackups -ojsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 --decode && echo
+oc get secret -n backuptarget-{user} kastenbackups -ojsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 --decode && echo
 ----
 +
 Copy the Secret Key to a text editor as it will be needed again shortly
 
 . Run the following command to retrieve the S3 endpoint address
 +
-[,bash]
+[source,bash]
 ----
- oc get route s3 -n openshift-storage -ojson | jq -r '.spec.host'
+oc get route s3 -n openshift-storage -ojson | jq -r '.spec.host'
 ----
 +
 Copy the Endpoint Address to a text editor as it will be needed again shortly
@@ -85,7 +90,7 @@ image::module-02-location-profile/01.png[]
 |  |
 
 | *_Location Profile Name_*
-| `kastenbackups`
+| `kastenbackups-{user}`
 
 | *_Storage Provider_*
 | S3 Compatible
@@ -131,10 +136,10 @@ image::module-02-location-profile/06.png[]
 As you can see from this example, Kasten Location Profiles can be created declaratively as a `profile.config.kio.kasten.io` object referencing a Secret to store access and secret keys.
 This Kubernetes-native implementation makes it simple to configure backup targets using a GitOps approach.
 +
-____
-[!NOTE]
+====
+[NOTE]
 
 See https://docs.kasten.io/latest/api/profiles.html[docs.kasten.io] for complete documentation on defining Profile API objects.
-____
+====
 
 . Click *_Cancel_* or the *_X_* in the upper-right to close the YAML window.

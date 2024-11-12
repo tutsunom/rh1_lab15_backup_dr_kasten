@@ -2,17 +2,13 @@
 
 == Introduction
 
-This repository hosts the lab guide for Lab 15 - Backup/DR with Veeam Kasten K10 at 2025 Red Hat One.
-
-It is designed to work with the Showroom lab environment provided by the Red Hat Demo Platform (RHDP) team.
-
 OpenShift Virtualization enables you to bring virtual machines onto a modern, Kubernetes-based infrastructure. It enables the development and delivery of new applications as well as the modernization of existing ones and can create applications that consist of virtual machines, containers, and serverless functions - all managed together using Kubernetes-native tools and paradigms.
 
 In this lab we will explore disaster recovery, backup and restore of Virtual Machines using the Veeam Kasten K10 product.
 
 == What Content Is Covered In The Lab?
 
-These are the *six* main sections that will be covered:
+These are the *five* main sections that will be covered:
 
 * _Installing Veeam Kasten_: In this section we will provide a review of how to install the product on any OpenShift cluster. Since the product is already installed in the lab environment this sectionwill be a review only.
 

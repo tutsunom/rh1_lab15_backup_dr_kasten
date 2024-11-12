@@ -12,7 +12,7 @@ In this lab we will explore disaster recovery, backup and restore of Virtual Mac
 
 == What Content Is Covered In The Lab?
 
-These are the *six* main sections that will be covered:
+These are the *five* main sections that will be covered:
 
 * _Installing Veeam Kasten_: In this section we will provide a review of how to install the product on any OpenShift cluster. Since the product is already installed in the lab environment this sectionwill be a review only.
 

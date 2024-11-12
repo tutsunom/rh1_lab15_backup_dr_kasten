@@ -22,8 +22,9 @@ Within the cluster, Kasten communicates with the Kubernetes API server to discov
 [IMPORTANT]
 
 We have pre-staged the lab with an install of Veeam Kasten, so there's no need to complete the steps in Section 2.
-Rather, this section just highlights how'd you go about installing Kasten if it were not already installed on
-the OpenShift cluster.
+Rather, this section just highlights how'd you go about installing Kasten if it were not already installed on the OpenShift cluster.
+
+Make sure you follow the instructions to access the Kasten K10 Dashboard in section 3 though!
 ====
 
 == 2. Installing Kasten
@@ -32,24 +33,24 @@ the OpenShift cluster.
 +
 image::module-01-install/02.png[]
 +
-____
-[!NOTE]
+====
+[NOTE]
 
 Alternate versions of the Kasten operator are available for use if transacting Kasten licensing through the Red Hat Marketplace.
 
 If desired, Kasten may also be https://docs.kasten.io/latest/install/openshift/helm.html#helm-based-installation[installed on OpenShift via Helm chart].
-____
+====
 
 . Under *_Version_*, select `7.0.12` from the dropdown menu, and click *_Install_*.
 +
 image::module-01-install/02b.png[]
 +
-____
-[!IMPORTANT]
+====
+[IMPORTANT]
 
 It's recommended to always run the latest available version of Kasten.
-Explicitly selecting version `7.0.5` is to ensure consistent instructions and corresponding screenshots in this lab guide.
-____
+Explicitly selecting version `7.0.12` is to ensure consistent instructions and corresponding screenshots in this lab guide.
+====
 
 . Under *_Update approval_* select *_Manual_* and then click *_Install_* to initiate operator installation.
 +
@@ -60,13 +61,13 @@ image::module-01-install/03.png[]
 image::module-01-install/03b.png[]
 
 . After operator installation completes, click *_View Operator_* (or select *_Operators → Installed Operators → Kasten K10 (Free)_* from the sidebar).
-. Under menu:_Provided APIs[K10_], click *_+ Create instance_*.
+. Under *Provided APIs - K10*, click *_+ Create instance_*.
 +
 image::module-01-install/04.png[]
 
 . Select *_YAML view_* and overwrite the default options with the configuration below:
 +
-[,yaml]
+[source,yaml]
 ----
  apiVersion: apik10.kasten.io/v1alpha1
  kind: K10
@@ -94,11 +95,11 @@ image::module-01-install/05b.png[]
 +
 This configuration will enable integration with the built-in OpenShift OAuth server and the creation of a `Route` for secure, multi-user access to the Kasten dashboard.
 +
-____
-[!NOTE]
+====
+[NOTE]
 
 A complete list of configuration parameters is https://docs.kasten.io/latest/install/advanced.html#complete-list-of-k10-helm-options[available on docs.kasten.io].
-____
+====
 
 . Click *_Create_*.
 . Open the *_Web Terminal_* and click *_Start_* to initialize the terminal (if prompted).
@@ -129,23 +130,22 @@ image::module-01-install/06.png[]
    k10.kasten.io/is-snapshot-class=true
 ----
 +
-____
-[!IMPORTANT]
+====
+[IMPORTANT]
 
 The `k10.kasten.io/is-snapshot-class` annotation is used by Kasten to determine which VolumeSnapshotClass should be used by Kasten to request CSI snapshots for PersistentVolumes provisioned by a given CSI provider.
-____
+====
 
 . Close the *_Web Terminal_*.
 
 == 3. Accessing the Kasten Dashboard
 
-. In the *_OpenShift Console_*, select *_Networking → Routes_* from the sidebar and open the `k10-route` Route URL.
-+
-image::module-01-install/07.png[]
-+
+. In a web browser navigate to the {kasten_dashboard}[^Kasten Dashboard].
 You should be redirected to the OpenShift OAuth login prompt.
 
-. Use the OpenShift Console `admin` credentials provided as part of your lab environment and click *_Log-in_*.
+. Use your OpenShift Console credentials provided as part of your lab environment and click *_Log-in_*.
+.. *User ID*: `{user}`
+.. *Password*: `{password}`
 +
 image::module-01-install/08.png[]
 
@@ -154,14 +154,17 @@ image::module-01-install/08.png[]
 +
 image::module-01-install/09.png[]
 +
-You should observe that the *_Kasten Dashboard_* is being accessed as your cluster's `admin` user.
+You should observe that the *_Kasten Dashboard_* is being accessed as your individual user.
 +
 image::module-01-install/10.png[]
 +
-____
-[!NOTE]
+====
+[NOTE]
 
 Kasten ships with multiple built-in user roles, including `k10-admin` and `k10-basic`.
 As Kasten is built on Kubernetes-native resources, custom roles can be built and bound to users/groups to define fine-grained access on a per namespace level.
+
 This helps to allow secure self-service for end users who may need to manage their own policies or restores without dependence on a data protection administrator.
-____
+
+Your user has been granted the `k10-admin` role.
+====
