@@ -65,7 +65,7 @@ oc get sc ocs-external-storagecluster-ceph-rbd -ojsonpath=='{.metadata.annotatio
 [TIP]
 
 The command to annotate the storage class would be (you don't need to execute this):
-+
+
 [source,bash,role=execute,subs="attributes"]
 ----
 oc annotate storageclass ocs-external-storagecluster-ceph-rbd \

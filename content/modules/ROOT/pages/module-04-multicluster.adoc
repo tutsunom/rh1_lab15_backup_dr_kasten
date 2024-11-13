@@ -1,5 +1,11 @@
 = Kasten Multi-Cluster
 
+====
+[WARNING]
+
+This section is for your information only. You can not execute this section on this lab environment because we are using a shared cluster for many users. Feel free to read through this section however to understand how you would set up Kasten for Multi-Cluster backup and restore.
+====
+
 == 1. Introduction
 
 Each Veeam Kasten deployment can function completely independent of other instances, without dependence on a separate customer-hosted or SaaS control plane - making it ideal for GitOps-style management and use in fully airgapped environments.
@@ -9,19 +15,19 @@ However, Kasten also provides a user interface for providing consolidated observ
 
 _In this exercise you will configure Kasten Multi-cluster Manager, join a second cluster, and distribute a centrally managed location profile to both clusters._
 
-____
-[!IMPORTANT]
+====
+[IMPORTANT]
 
 As each learner only has a single cluster, you will need to work with a partner, designating (1) user/cluster as `cluster-1` and (1) user/cluster as `cluster-2`.*
-____
+====
 
 == 2. Configuring Primary Cluster
 
-____
-[!CAUTION]
+====
+[CAUTION]
 
 This section should be completed by the `cluster-1` user *_ONLY_*.
-____
+====
 
 The *_Primary_* cluster defines and stores all global resources, such as Policies and Profiles, and also https://docs.kasten.io/latest/operating/monitoring.html#k10-multi-cluster-metrics[aggregates a subset of cluster metrics] for centralized reporting.
 
@@ -38,12 +44,12 @@ After setup completes, you should see the *_Multi-cluster Manager_* view.
 +
 image::module-04-multicluster/04.png[]
 +
-____
-[!NOTE]
+====
+[NOTE]
 
 A Kasten cluster can also be promoted to the primary cluster role declaratively using Helm/Operand parameters.
 See https://docs.kasten.io/latest/multicluster/tutorials/getting_started.html#setting-up-the-primary-cluster-using-helm[docs.kasten.io] for details.
-____
+====
 
 . Select *_Join Tokens_* from the sidebar and click *_+ Create New Join Token_*.
 +
@@ -53,34 +59,33 @@ image::module-04-multicluster/05.png[]
 +
 image::module-04-multicluster/06.png[]
 +
-____
-[!NOTE]
+====
+[NOTE]
 
 Join Tokens are a type of Kubernetes Secret that can be created declaratively.
 See https://docs.kasten.io/latest/multicluster/tutorials/getting_started.html#join-tokens[docs.kasten.io] for examples.
 
 A single token can be used for multiple clusters.
 Deleting tokens has no impact on clusters that have already joined multi-cluster, but will prevent additional clusters from joining using the deleted token.
-____
+====
 
 . Click *_Copy_* to copy the token value to the clipboard and send the value to your `cluster-2` partner via one of the following:
  ** Email/Slack/etc.
  ** Slowly reading it aloud 😡
  ** Carrier pigeon 🪶
  ** Writing it down on a Post-It and burning it after use 🤷‍♂️
- ** Probably stick with Email/Slack/etc.
-👍
+ ** Probably stick with Email/Slack/etc. 👍
  ** In real life, token values could be distributed to clusters using any Kubernetes Secrets management solution (ex.
 Vault + External Secrets Operator)
 . Click *_Done_*.
 
 == 3. Joining Multi-Cluster from Secondary
 
-____
-[!CAUTION]
+====
+[CAUTION]
 
 This section should be completed by the `cluster-2` user *_ONLY_*.
-____
+====
 
 . In the *_Kasten Dashboard_*, select *_Multi-Cluster_* from the sidebar.
 . Under *_Join a Multi-Cluster System_*, click *_Join_*.
@@ -89,12 +94,12 @@ image::module-04-multicluster/07.png[]
 
 . Paste the `lab-token` value from the primary cluster into the *_Token_* field.
 +
-____
-[!NOTE]
+====
+[NOTE]
 
 The join token also encodes the Kasten ingress URL required for a secondary to reach the primary cluster.
 If an alternate URL is required in a production environment, this value can be overridden as seen in the UI.
-____
+====
 
 . Specify `cluster-2` as the *_Local Cluster Name_* and click *_Use Current_* to populate *_Local Cluster Ingress_* with the current Kasten Route value.
 +
@@ -106,20 +111,20 @@ After a few moments you should observe the Multi-Cluster status page indicating 
 +
 image::module-04-multicluster/09.png[]
 +
-____
-[!TIP]
+====
+[TIP]
 
 Joining secondary clusters can also be automated as part of a GitOps-style deployment by creating a `mc-join` Secret and `mc-join-config` ConfigMap on the secondary cluster to provide the join token and name/ingress details.
 See https://docs.kasten.io/latest/multicluster/tutorials/getting_started.html#adding-a-secondary-cluster[docs.kasten.io] for details.
-____
+====
 
 == 4. Managing Global Resources
 
-____
-[!CAUTION]
+====
+[CAUTION]
 
 This section should be completed by the `cluster-1` user *_ONLY_*.
-____
+====
 
 . In the `cluster-1` *_Kasten Dashboard_*, select *_Multi-Cluster Manager_* from the dropdown menu and validate the *_Clusters_* page now displays both clusters.
 +
@@ -131,11 +136,11 @@ This will pre-fill a form to extend the `k10-multi-cluster-admin` ClusterRole to
 +
 image::module-04-multicluster/11.png[]
 +
-____
-[!NOTE]
+====
+[NOTE]
 
 In a production environment this can be modified to give granular control over a subset of clusters to different users or groups.
-____
+====
 
 . Keep the default settings and click *_Save_*.
 . Select *_Clusters_* from the sidebar and click into `cluster-2` to validate it is accessible.
@@ -231,13 +236,13 @@ You should observe that the distribution has been synced to the selected cluster
 +
 image::module-04-multicluster/16.png[]
 +
-____
-[!TIP]
+====
+[TIP]
 
 You can view a summary of global resources for each cluster from the *_Multi-Cluster_* status page as shown below.
 
 image::module-04-multicluster/17.png[]
-____
+====
 
 == 5. Takeaways
 

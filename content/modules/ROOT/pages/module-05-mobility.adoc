@@ -1,5 +1,11 @@
 = App Mobility
 
+====
+[WARNING]
+
+This section is for your information only. You can not execute this section on this lab environment because we are using a shared cluster for many users. Feel free to read through this section however to understand how you would set up Kasten to restore workloads to a different cluster from the one they were backed up from.
+====
+
 == 1. Introduction
 
 _In this exercise you will restore an OpenShift Virtual Machine to an alternate cluster from a Kasten backup._
@@ -53,11 +59,11 @@ image::module-05-mobility/3.png[]
 +
 image::module-05-mobility/3b.png[]
 +
-____
-[!CAUTION]
+====
+[CAUTION]
 
 Ensure `global-profile-example` is selected, not `ceph-rgw-immutable` - this is because `global-profile-example` points to the backup repository on `cluster-1`, whereas the `ceph-rgw-immutable` profile on `cluster-2` points to its own, local Ceph bucket.
-____
+====
 
 . Click *_Create Policy_*.
 . Under the new `kasten-lab-import` Policy, click *_Run Once → Yes_* to initiate importing `kasten-lab` RestorePoints.
@@ -78,16 +84,16 @@ You should observe the `fedora-k10` VM from `cluster-1` running in the `kasten-l
 
 == 3. Advanced Options
 
-____
+====
 _What if you want to automate restoring the most recent backup to a standby cluster for DR or test/dev purposes?_
-____
+====
 
 Simply update the `kasten-lab-import` Policy's frequency from *_On-Demand_* to the desired frequency (e.g.
 Hourly, Daily, etc.).
 
-____
+====
 _What if you need to make changes such as targeting an alternate StorageClass for restore or modifying the Route hostname?_
-____
+====
 
 Kasten provides a robust transformation engine, allowing you to test, add, delete, copy, or replace key value pairs in a resource's manifest.
 
