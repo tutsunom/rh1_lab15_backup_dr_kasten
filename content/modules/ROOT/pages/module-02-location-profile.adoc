@@ -55,7 +55,14 @@ If this is the first time you are opening a terminal you may need to *Create a P
 image::module-02-location-profile/002a.png[]
 ====
 
-. Run the following command to retrieve the Access Key for the Multicloud Object Gateway:
+. An `ObjectBucketClaim` has already been created for you. You can examine the claim using the following command:
++
+[source,bash,role=execute,subs="attributes"]
+----
+oc describe objectbucketclaim -n backuptarget-{user} kastenbackups
+----
+
+. Run the following command to retrieve the Access Key for the bucket:
 +
 [source,bash,role=execute,subs="attributes"]
 ----
@@ -65,7 +72,7 @@ oc get secret -n backuptarget-{user} kastenbackups \
 +
 Copy the Access Key to a text editor as it will be needed again shortly
 
-. Run the following command to retrieve the Secret Key for the Multicloud Object Gateway:
+. Run the following command to retrieve the Secret Key for the bucket:
 +
 [source,bash,role=execute,subs="attributes"]
 ----
@@ -130,7 +137,7 @@ image::module-02-location-profile/02.png[]
 +
 image::module-02-location-profile/02b.png[]
 
-. Click *_Next → Save Profile_*.
+. Click *_Next_* followed by *_Submit_* to create the Location Profile.
 +
 You should expect your `kastenbackups-{user}` Location Profile to appear with a *_Success_* status.
 +

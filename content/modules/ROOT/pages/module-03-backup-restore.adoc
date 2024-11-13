@@ -8,7 +8,8 @@ _In this exercise you will create and run a Kasten policy for protecting Virtual
 
 Fist you will create a new VM in a new project to use for the exercise.
 
-. In the *_OpenShift Console_*, select the *_Project_* menu and click *_Create Project_*.
+. In the *_OpenShift Console_*, navigate to *_Virtualization_* -> *_Virtual Machines_*.
+. To create a new project to work in select the *_Project_* menu and click *_Create Project_*.
 +
 image::module-03-backup-restore/01.png[]
 
@@ -51,13 +52,26 @@ As some storage provisioners may not fully support Block volume mode, StorageCla
 This is skipped in the lab exercise as the `openshift-storage.rbd.csi.ceph.com` provisioner is known to be compatible.
 ====
 
-. In the *_Web Terminal_*, run the following to allow the Kasten datamover to export raw Block volumes using the `ocs-external-storagecluster-ceph-rbd` StorageClass:
+. Your `StorageClass` has already been set up to allow the Kasten datamover to export raw Block volumes using the `ocs-external-storagecluster-ceph-rbd` StorageClass:
 +
-[,bash]
+In the *_Web Terminal_*, run the following command to validate that the annotation is present (you should see an annotation starting with `k10.kastion.io`):
++
+[source,bash,role=execute,subs="attributes"]
 ----
- oc annotate storageclass ocs-external-storagecluster-ceph-rbd \
-   k10.kasten.io/sc-supports-block-mode-exports=true
+oc get sc ocs-external-storagecluster-ceph-rbd -ojsonpath=='{.metadata.annotations}';echo
 ----
++
+====
+[TIP]
+
+The command to annotate the storage class would be (you don't need to execute this):
++
+[source,bash,role=execute,subs="attributes"]
+----
+oc annotate storageclass ocs-external-storagecluster-ceph-rbd \
+  k10.kasten.io/sc-supports-block-mode-exports=true
+----
+====
 +
 By default, Kasten provides an out-of-the-box, direct API integration with ODF's Ceph Volume Manager for block data movement - including support for incremental backups to lower storage consumption requirements for protecting Virtual Machines.
 +
@@ -89,7 +103,8 @@ The following command can be used to produce a properly formatted list of namesp
 
 [source,bash,role=execute,subs="attributes"]
 ----
-oc get ns --no-headers=true | awk 'BEGIN { print "  excludedApps:" } /^openshift/{print "    -",$1}'
+oc get ns --no-headers=true | \
+  awk 'BEGIN { print "  excludedApps:" } /^openshift/{print "  -",$1}'
 ----
 
 Your lab environment has already been configured to exclude system namespaces.
@@ -105,7 +120,7 @@ image::module-03-backup-restore/09.png[]
 +
 image::module-03-backup-restore/10.png[]
 
-. Use `kasten-lab-backup-{user}` for the *_Name_* and leave the default (`Snapshot`) for *_Action_*.
+. Leave the defaults for *_Name_* and *_Action_*.
 +
 image::module-03-backup-restore/11.png[]
 +
@@ -216,7 +231,7 @@ Click into each individual *_Action_* to view to associated details, including Y
 +
 image::module-03-backup-restore/18.png[]
 
-. Wait for the *_Policy Run_* to complete before proceeding.
+. Wait for the *_Policy Run_* to complete before proceeding. It should take less than 5 minutes for the backup to finish.
 +
 ====
 [WARNING]
@@ -258,9 +273,13 @@ Kasten will terminate the running VM and overwrite the existing resources.
 However, any resources in the namespace that do not exist in the RestorePoint will not be altered (protecting against unintentional data loss).
 ====
 
+. Confirm the restore action by validating the application and click *_Restore_*.
++
+image::module-03-backup-restore/21a.png[]
+
 . Return to the *_Dashboard_* to monitor the status of the *_Restore_* under *_Actions_*.
 +
-You should expect this operation to complete rapidly, as the VM volume is being restored from a local CSI VolumeSnapshot.
+You should expect this operation to complete rapidly (less than 2 minutes), as the VM volume is being restored from a local CSI VolumeSnapshot.
 
 . Once the *_Restore_* has completed, return to *_OpenShift Console → Virtualization → Virtual Machines_* and validate the `fedora-k10` VM is *_Running_*.
 +
@@ -273,7 +292,7 @@ You can also validate the source of the restored volume by running:
 
 [source,bash,role=execute,subs="attributes"]
 ----
-oc describe pvc fedora-k10 -n kasten-lab
+oc describe pvc fedora-k10 -n kasten-lab-{user}
 ----
 
 You should observe the volume's *_DataSource_* is a `+k10-csi-snap-...+` VolumeSnapshot, confirming the volume was restored from a local snapshot.
@@ -289,7 +308,7 @@ Often, local snapshot data may not be available, requiring that data be restored
 ----
 oc delete virtualmachine fedora-k10 -n kasten-lab-{user}
 
-oc delete namespace kasten-lab-{user}
+oc delete project kasten-lab-{user}
 ----
 +
 ====
@@ -298,7 +317,7 @@ oc delete namespace kasten-lab-{user}
 _"Snapshots are not backup."_              ~ Mark Twain
 
 VolumeSnapshots are namespaced resources.
-Removing the `kasten-lab` namespace will delete the VolumeSnapshots associated with your local RestorePoints.
+Removing the `kasten-lab-{user}` namespace will delete the VolumeSnapshots associated with your local RestorePoints.
 Additionally, the `ocs-storagecluster-rbdplugin-snapclass` VolumeSnapshotClass sets `deletionPolicy: Delete` by default, meaning that deletion of the VolumeSnapshot resource results in the removal of the snapshot within Ceph.
 ====
 
@@ -320,8 +339,18 @@ image::module-03-backup-restore/24.png[]
 . Specify `kasten-lab-clone-{user}` as the *_New Namespace_* and click *_Create_*.
 +
 image::module-03-backup-restore/25.png[]
++
+====
+[WARNING]
 
-. Click *_Restore_* and return to the *_Dashboard_* to monitor progress under *_Actions_*.
+Make sure to click the green *_Create_* button to create the new namespace!
+====
+
+. Click *_Restore_*, then in the confirmation dialog click *_Restore_* again.
++
+image::module-03-backup-restore/25a.png[]
+
+. Return to the *_Dashboard_* to monitor progress under *_Actions_*.
 +
 image::module-03-backup-restore/26.png[]
 
@@ -330,7 +359,7 @@ image::module-03-backup-restore/26.png[]
 image::module-03-backup-restore/27.png[]
 +
 ====
-[!NOTE]
+[NOTE]
 
 Unlike the local restore, the PVC populated by the Kasten datamover will not contain a *_DataSource_* snapshot reference:
 
