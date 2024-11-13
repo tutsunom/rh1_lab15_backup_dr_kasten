@@ -66,7 +66,7 @@ oc get sc ocs-external-storagecluster-ceph-rbd -ojsonpath=='{.metadata.annotatio
 
 The command to annotate the storage class would be (you don't need to execute this):
 
-[source,bash,role=execute,subs="attributes"]
+[source,bash]
 ----
 oc annotate storageclass ocs-external-storagecluster-ceph-rbd \
   k10.kasten.io/sc-supports-block-mode-exports=true
@@ -237,7 +237,6 @@ image::module-03-backup-restore/18.png[]
 [WARNING]
 
 If your policy fails, review the provided error message for further details.
-_Did you skip link:./backup-restore#_3-enabling-block-mode-exports[annotating the storage class to allow block mode exports] earlier in the lab?_
 
 image::module-03-backup-restore/18b.png[]
 ====

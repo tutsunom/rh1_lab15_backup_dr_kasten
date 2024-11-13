@@ -43,3 +43,11 @@ Your credentials for both are:
 
 * *User:* {user}
 * *Password:* {password}
+
+=== Important information about your User
+
+====
+[NOTE]
+
+All screenshots in the following lab guides reference *user1*. Please make sure to follow the *text* to ensure you use the correct user that has been assigned to you!
+====
