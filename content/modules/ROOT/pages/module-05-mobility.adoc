@@ -13,11 +13,11 @@ The demo environment on the https://demo.redhat.com[Red Hat Demo Platform^] does
 
 _In this exercise you will restore an OpenShift Virtual Machine to an alternate cluster from a Kasten backup._
 
-____
-[!CAUTION]
+====
+[CAUTION]
 
 This exercise should be completed by the `cluster-1` user *_ONLY_*.
-____
+====
 
 == 2. Creating an Import Policy
 
