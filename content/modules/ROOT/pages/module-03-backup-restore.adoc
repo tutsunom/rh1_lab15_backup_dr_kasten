@@ -77,7 +77,7 @@ image::module-03-backup-restore/07.png[]
 Your `kasten-lab-{user}` application should appear as *_Unmanaged_*, indicating it is not being protected by any policy.
 +
 ====
-[!TIP]
+[TIP]
 
 You will notice that you don't see any namespaces starting with `openshift` in the list of applications.
 
@@ -87,9 +87,12 @@ image::module-03-backup-restore/08.png[]
 
 The following command can be used to produce a properly formatted list of namespaces beginning with `openshift` that can be copy/paste into the K10 Operand YAML tab:
 
-`+bash oc get ns --no-headers=true | awk 'BEGIN { print "  excludedApps:" } /^openshift/{print "    -",$1}' +`
+[source,bash,role=execute,subs="attributes"]
+----
+oc get ns --no-headers=true | awk 'BEGIN { print "  excludedApps:" } /^openshift/{print "    -",$1}'
+----
 
-Your lab environment has been configured already to exclude system namespaces.
+Your lab environment has already been configured to exclude system namespaces.
 ====
 
 . Click `kasten-lab-{user}` in the *_Applications_* list to view details about the workloads and additional resources discovered within the namespace.
