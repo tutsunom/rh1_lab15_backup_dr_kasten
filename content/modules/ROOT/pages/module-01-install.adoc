@@ -29,6 +29,12 @@ Make sure you follow the instructions to access the Kasten K10 Dashboard in sect
 
 == 2. Installing Kasten
 
+====
+[WARNING]
+
+While you do have access to the `kasten-io` namespace *PLEASE DO NOT MODIFY ANYTHING IN THAT NAMESPACE*. This namespace is shared by all lab participants and changing anything could break the lab for *everyone*!
+====
+
 . In the *_OpenShift Console_*, search for `Kasten` in the *_OperatorHub_* and select *_Kasten K10 (Free)_*:
 +
 image::module-01-install/02.png[]
@@ -163,8 +169,8 @@ image::module-01-install/10.png[]
 
 Kasten ships with multiple built-in user roles, including `k10-admin` and `k10-basic`.
 As Kasten is built on Kubernetes-native resources, custom roles can be built and bound to users/groups to define fine-grained access on a per namespace level.
-
++
 This helps to allow secure self-service for end users who may need to manage their own policies or restores without dependence on a data protection administrator.
-
++
 Your user has been granted the `k10-admin` role.
 ====
