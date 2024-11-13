@@ -159,8 +159,9 @@ image::module-01-install/08.png[]
 . Specify your *_Email Address_* and *_Company_* values and click *_Accept Terms_*.
 +
 image::module-01-install/09.png[]
-+
-You should observe that the *_Kasten Dashboard_* is being accessed as your individual user.
+
+. Click on *_Skip Tour_* to skip the tour of the Kasten dashboard for the time being.
+. You should observe that the *_Kasten Dashboard_* is being accessed as your individual user.
 +
 image::module-01-install/10.png[]
 +
