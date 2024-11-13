@@ -169,8 +169,8 @@ image::module-01-install/10.png[]
 
 Kasten ships with multiple built-in user roles, including `k10-admin` and `k10-basic`.
 As Kasten is built on Kubernetes-native resources, custom roles can be built and bound to users/groups to define fine-grained access on a per namespace level.
-+
+
 This helps to allow secure self-service for end users who may need to manage their own policies or restores without dependence on a data protection administrator.
-+
+
 Your user has been granted the `k10-admin` role.
 ====
