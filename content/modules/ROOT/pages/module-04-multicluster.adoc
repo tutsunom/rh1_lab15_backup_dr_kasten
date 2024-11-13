@@ -3,7 +3,9 @@
 ====
 [WARNING]
 
-This section is for your information only. You can not execute this section on this lab environment because we are using a shared cluster for many users. Feel free to read through this section however to understand how you would set up Kasten for Multi-Cluster backup and restore.
+This section is for your information only. You can not execute this section on this lab environment because for Red Hat One we are using a shared cluster for many users. Feel free to read through this section however to understand how you would set up Kasten for Multi-Cluster backup and restore.
+
+The demo environment on the https://demo.redhat.com[Red Hat Demo Platform^] does not have that restriction. Feel free to use that environment after Red Hat One.
 ====
 
 == 1. Introduction
