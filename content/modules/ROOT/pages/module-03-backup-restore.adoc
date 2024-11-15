@@ -36,7 +36,7 @@ image::module-03-backup-restore/05.png[]
 ====
 [NOTE]
 
-This will provision the VM with preferred storage settings for the `ocs-external-storagecluster-ceph-rbd` StorageClass, specifically *_Block VolumeMode_* to provide the *_ReadWriteMany_* access required to enable live migration between OpenShift nodes.
+This will provision the VM with preferred storage settings for the `{kasten_storageclass}` StorageClass, specifically *_Block VolumeMode_* to provide the *_ReadWriteMany_* access required to enable live migration between OpenShift nodes.
 ====
 
 . Validate the `fedora-k10-volume` PersistentVolumeClaim configuration from *_Storage → PersistentVolumeClaims_* in the sidebar.
@@ -52,13 +52,13 @@ As some storage provisioners may not fully support Block volume mode, StorageCla
 This is skipped in the lab exercise as the `openshift-storage.rbd.csi.ceph.com` provisioner is known to be compatible.
 ====
 
-. Your `StorageClass` has already been set up to allow the Kasten datamover to export raw Block volumes using the `ocs-external-storagecluster-ceph-rbd` StorageClass:
+. Your `StorageClass` has already been set up to allow the Kasten datamover to export raw Block volumes using the `{kasten_storageclass}` StorageClass:
 +
 In the *_Web Terminal_*, run the following command to validate that the annotation is present (you should see an annotation starting with `k10.kastion.io`):
 +
 [source,bash,role=execute,subs="attributes"]
 ----
-oc get sc ocs-external-storagecluster-ceph-rbd -ojsonpath=='{.metadata.annotations}';echo
+oc get sc {kasten_storageclass} -ojsonpath=='{.metadata.annotations}';echo
 ----
 +
 ====
@@ -68,7 +68,7 @@ The command to annotate the storage class would be (you don't need to execute th
 
 [source,bash]
 ----
-oc annotate storageclass ocs-external-storagecluster-ceph-rbd \
+oc annotate storageclass {kasten_storageclass} \
   k10.kasten.io/sc-supports-block-mode-exports=true
 ----
 ====
