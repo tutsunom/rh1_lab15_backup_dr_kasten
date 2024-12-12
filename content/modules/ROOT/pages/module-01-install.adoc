@@ -75,24 +75,25 @@ image::module-01-install/04.png[]
 +
 [source,yaml]
 ----
- apiVersion: apik10.kasten.io/v1alpha1
- kind: K10
- metadata:
-   name: k10
-   namespace: kasten-io
-   annotations:
-     helm.sdk.operatorframework.io/rollback-force: 'false'
- spec:
-   auth:
-     openshift:
-       enabled: true
-       dashboardURL: https://k10-route-kasten-io.apps.YOUR-WORKSHOP-ID.dynamic.redhatworkshops.io/k10
-       openshiftURL: https://apiserver.openshift-kube-apiserver.svc.cluster.local
-       insecureCA: true
-   route:
-     enabled: true
-     tls:
-       enabled: true
+---
+apiVersion: apik10.kasten.io/v1alpha1
+kind: K10
+metadata:
+  name: k10
+  namespace: kasten-io
+  annotations:
+    helm.sdk.operatorframework.io/rollback-force: 'false'
+spec:
+  auth:
+    openshift:
+      enabled: true
+      dashboardURL: https://k10-route-kasten-io.apps.YOUR-WORKSHOP-ID.dynamic.redhatworkshops.io/k10
+      openshiftURL: https://apiserver.openshift-kube-apiserver.svc.cluster.local
+      insecureCA: true
+  route:
+    enabled: true
+    tls:
+      enabled: true
 ----
 
 . Replace `YOUR-WORKSHOP-ID` with the 5 character identifier for your lab environment DNS, as shown in the screenshot below:
@@ -116,7 +117,7 @@ image::module-01-install/01.png[]
 +
 [,bash]
 ----
- watch oc get pods -n kasten-io
+watch oc get pods -n kasten-io
 ----
 
 . Once all Deployments are `READY`, press `CTRL+C` to end the `watch`.
@@ -127,13 +128,13 @@ image::module-01-install/06.png[]
 +
 [,bash]
 ----
- oc annotate volumesnapshotclass \
-   ocs-external-storagecluster-rbdplugin-snapclass  \
-   k10.kasten.io/is-snapshot-class=true
+oc annotate volumesnapshotclass \
+  ocs-external-storagecluster-rbdplugin-snapclass  \
+  k10.kasten.io/is-snapshot-class=true
 
- oc annotate volumesnapshotclass \
-   ocs-external-storagecluster-cephfsplugin-snapclass \
-   k10.kasten.io/is-snapshot-class=true
+oc annotate volumesnapshotclass \
+  ocs-external-storagecluster-cephfsplugin-snapclass \
+  k10.kasten.io/is-snapshot-class=true
 ----
 +
 ====
