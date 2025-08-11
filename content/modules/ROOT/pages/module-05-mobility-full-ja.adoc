@@ -1,0 +1,110 @@
+= アプリケーションモビリティ
+
+====
+[WARNING]
+
+このセクションは情報提供のみを目的としています。このラボ環境では、多くのユーザーでクラスタを共有しているため、この手順を実行することはできません。ただし、このセクションを読むことで、Kastenを使用してバックアップ元とは異なるクラスタにワークロードをリストアする方法を理解できます。
+
+https://demo.redhat.com[Red Hat Demo Platform^] のデモ環境には、この制限はありません。Red Hat One の後に自由に利用できます。
+
+====
+
+== 1. はじめに
+
+_この演習では、Kasten バックアップから OpenShift 仮想マシンを別のクラスタにリストアします。_
+
+====
+[CAUTION]
+
+この演習は `cluster-1` ユーザー *_のみ_* が実施してください。
+====
+
+== 2. インポートポリシーの作成
+
+以前の演習で作成した「Snapshot」ポリシーとは異なり、「Import」ポリシーは Kasten の RestorePoint を別のクラスタにインポートするために使用されます。
+
+. *_Kasten Dashboard_* で、マルチクラスタのドロップダウンメニューから `cluster-1` を選択し、サイドバーから *_Policies → Policies_* を選択します。
+. `kasten-lab-backup` ポリシーの下にある *_Show import details..._* をクリックします。
++
+image::module-05-mobility/1.png[]
+
+. *_Copy to Clipboard_* をクリックしてマイグレーショントークンをコピーします。
+この値は後の手順で使用するため保存しておきます。
++
+image::module-05-mobility/2.png[]
+
+. マルチクラスタのドロップダウンメニューから `cluster-2` を選択し、サイドバーから *_Policies → Policies_* を選択します。
+. *_+ New Policy_* をクリックし、以下の項目を入力します。
++
+|===
+|  |
+
+| *_Name_*  
+| `kasten-lab-import`
+
+| *_Action_*  
+| *_Import_* を選択
+
+| *_Restore After Import_*  
+| 有効化
+
+| *_Import Frequency_*  
+| *_On-Demand_* を選択
+
+| *_Config Data for Import_*  
+| マイグレーショントークンを貼り付け
+
+| *_Profile for Import_*  
+| `global-profile-example` を選択
+|===
++
+image::module-05-mobility/3.png[]
++
+image::module-05-mobility/3b.png[]
++
+====
+[CAUTION]
+
+必ず `global-profile-example` を選択してください。`ceph-rgw-immutable` ではありません。  
+理由は、`global-profile-example` は `cluster-1` 上のバックアップリポジトリを参照している一方で、`cluster-2` 上の `ceph-rgw-immutable` プロファイルは自身のローカル Ceph バケットを参照しているためです。
+====
+
+. *_Create Policy_* をクリックします。
+. 新しい `kasten-lab-import` ポリシーの下で *_Run Once → Yes_* をクリックし、`kasten-lab` RestorePoint のインポートを開始します。
++
+image::module-05-mobility/4.png[]
+
+. サイドバーの *_Dashboard_* に戻り、*_Actions_* の `kasten-lab-import` ポリシーの実行を選択してステータスを確認します。
++
+image::module-05-mobility/5.png[]
++
+インポートが完了すると、最新の `kasten-lab` RestorePoint を使用してリストアが即時に開始されます。
+
+. リストアが完了したら、`cluster-2` の *_OpenShift Console → Virtualization → Virtual Machines_* を開きます。
++
+image::module-05-mobility/6.png[]
++
+`cluster-1` からの `fedora-k10` 仮想マシンが `kasten-lab` ネームスペースで稼働していることが確認できます（以前のラボ演習でクローンした `fedora-k10` 仮想マシンとは別です）。
+
+== 3. 高度なオプション
+
+====
+_DR やテスト/開発目的で、最新のバックアップをスタンバイクラスタへ自動的にリストアしたい場合はどうすればよいですか？_
+====
+
+`kasten-lab-import` ポリシーの頻度を *_On-Demand_* から希望する頻度（例: 毎時、毎日など）に変更するだけです。
+
+====
+_リストア時に別の StorageClass を指定したり、Route のホスト名を変更する必要がある場合はどうしますか？_
+====
+
+Kasten には強力な変換エンジンが搭載されており、リソースのマニフェスト内のキーと値のペアをテスト、追加、削除、コピー、または置換できます。
+
+以下の動画では、オンプレミスの OpenShift クラスタから ROSA クラスタに移行するアプリケーションに対して、Transform を作成・適用する例を紹介しています。  
++++<iframe width="847" height="476" src="https://www.youtube.com/embed/qocZk5fdxsY" title="Scaling Restore Operations with K10 Transform Sets" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="">++++++</iframe>+++
+
+== 4. まとめ
+
+* Kasten のバックアップは Import ポリシーを使って別クラスタへリストア可能
+* Import ポリシーを使えば、DR やテスト/開発環境向けに最新バックアップからのリストアを自動化できる
+* Transform を使用すると、マニフェスト仕様を変更して、異なるクラスタやストレージ、クラウド間でワークロードを移動しやすくできる

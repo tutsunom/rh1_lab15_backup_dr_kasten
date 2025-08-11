@@ -1,0 +1,110 @@
+= Veeam Kasten のインストール
+
+== 1. はじめに
+
+この追加ラボガイドは、*_Veeam Kasten for Kubernetes_* を使用して OpenShift Virtualization のワークロードを保護する方法に慣れることを目的としています。  
+このガイドは、学習者が他の *_OpenShift Virtualization Roadshow_* ラボ演習を完了しており、OpenShift における仮想マシンのプロビジョニングおよび管理に精通していることを前提としています。
+
+=== Veeam Kasten とは？
+
+*_Veeam Kasten for Kubernetes_* は、Kubernetes 専用に設計されたデータ保護ソリューションで、アプリケーションのバックアップ＆リストア、ディザスタリカバリー、クラスタ間モビリティを実現します。
+
+=== Kasten はどのように動作するのか？
+
+image::module-01-install/00.png[]
+
+. Kasten は保護対象のクラスタにデプロイされます。  
+クラスタ内で、Kasten は Kubernetes API サーバーと通信してアプリケーションおよびそのリソースを検出します。
+. Kasten は、アプリケーションのマニフェストデータとストレージボリュームデータを含む完全なアプリケーションの時点スナップショットをオーケストレーションします。
+. Kasten は、この時点スナップショットのポータブルコピーを外部のオブジェクトストレージ、NFS、または Veeam リポジトリにエクスポートします。
+
+====
+[IMPORTANT]
+
+ラボ環境にはすでに Veeam Kasten がインストール済みの状態で準備されているため、セクション 2 の手順を実施する必要はありません。  
+このセクションでは、OpenShift クラスタに Kasten が未インストールの場合のインストール手順を紹介します。  
+
+ただし、このラボのセクション 3 の指示に従って Kasten K10 ダッシュボードへアクセスしてください！
+====
+
+== 2. Kasten のインストール
+
+====
+[WARNING]
+
+`kasten-io` ネームスペースにアクセスできますが、*このネームスペース内では何も変更しないでください*。  
+このネームスペースはすべてのラボ参加者で共有されており、変更すると *全員のラボ環境が破損する可能性があります*。
+====
+
+. *_OpenShift Console_* で *_OperatorHub_* を開き、`Kasten` を検索して *_Kasten K10 (Free)_* を選択します。
++
+image::module-01-install/02.png[]
++
+====
+[NOTE]
+
+Red Hat Marketplace を通じて Kasten のライセンスを購入する場合、別バージョンの Kasten Operator を使用できます。  
+
+必要に応じて、Kasten は https://docs.kasten.io/latest/install/openshift/helm.html#helm-based-installation[Helm Chart] を使って OpenShift にインストールすることも可能です。
+====
+
+. *_Version_* で `7.0.12` を選択し、*_Install_* をクリックします。
++
+image::module-01-install/02b.png[]
++
+====
+[IMPORTANT]
+
+Kasten は常に最新バージョンの利用が推奨されます。  
+このラボでは手順やスクリーンショットを統一するため、明示的に `7.0.12` を選択しています。
+====
+
+. *_Update approval_* で *_Manual_* を選択し、*_Install_* をクリックして Operator のインストールを開始します。
++
+image::module-01-install/03.png[]
+
+. プロンプトが表示されたら *_Approve_* をクリックしてインストールを続行します。
++
+image::module-01-install/03b.png[]
+
+. インストール完了後、*_View Operator_* をクリック（または *_Operators → Installed Operators → Kasten K10 (Free)_* を選択）。
+. *Provided APIs - K10* の下で *_+ Create instance_* をクリックします。
++
+image::module-01-install/04.png[]
+
+. *_YAML view_* を選択し、以下の設定に置き換えます。
++
+[source,yaml]
+----
+---
+apiVersion: apik10.kasten.io/v1alpha1
+kind: K10
+metadata:
+  name: k10
+  namespace: kasten-io
+  annotations:
+    helm.sdk.operatorframework.io/rollback-force: 'false'
+spec:
+  auth:
+    openshift:
+      enabled: true
+      dashboardURL: https://k10-route-kasten-io.apps.YOUR-WORKSHOP-ID.dynamic.redhatworkshops.io/k10
+      openshiftURL: https://apiserver.openshift-kube-apiserver.svc.cluster.local
+      insecureCA: true
+  route:
+    enabled: true
+    tls:
+      enabled: true
+----
+
+. `YOUR-WORKSHOP-ID` をラボ環境 DNS の 5 文字の識別子に置き換えます（下図参照）。
++
+image::module-01-install/05b.png[]
++
+この設定により、OpenShift 組み込み OAuth サーバーとの統合と、Kasten ダッシュボードへの安全なマルチユーザーアクセスのための `Route` 作成が有効になります。
++
+====
+[NOTE]
+
+設定パラメータの完全な一覧は https://docs.kasten.io/latest/install/advanced.html#complete-list-of-k10-helm-options[docs.kasten.io] に記載されています。
+==

@@ -1,0 +1,203 @@
+= Location Profile の設定
+
+== 1. はじめに
+
+Kasten を用いて Kubernetes アプリケーションのローカルスナップショットを取得するために必要な設定は、ここまでで完了しています。
+ しかし、_スナップショットはバックアップではありません！_ 
+プライマリのクラスタやストレージに障害が発生した場合に確実に復旧できるよう、データのコピーは別の場所へエクスポートしておく必要があります。
+
+これらのバックアップ先の設定は *_Location Profiles_* と呼ばれます。
+ Kasten は https://docs.kasten.io/latest/usage/configuration.html[複数のオプション] をサポートしており、以下を含みます：
+
+* AWS S3
+* Azure Blob
+* Google Cloud Storage
+* S3-Compatible
+* NFS
+* Veeam Backup & Recovery
+
+Kasten は Immutable（改ざん不可）バックアップの作成をサポートしており、ランサムウェアなどに対する最後の防衛線となります。
+ Immutable が有効な場合、バックアップデータはどのユーザーによっても改ざんや削除ができません。
+ このバックアップは以下のプラットフォームでサポートされています：
+
+* AWS S3
+* Object Lock をサポートする S3-Compatible（例：Ceph, MinIO, Wasabi など）
+* Azure Blob
+* Google Cloud Storage
+
+'''
+
+_この演習では、クラスタ上にデプロイされた Ceph Object Gateway を使用してバケットを作成し、そのバケットを Kasten に Location Profile として追加します。_
+
+====
+
+[CAUTION]
+
+実運用環境では、保護対象のインフラと同じ環境をバックアップ先として使用してはいけません。
+ このラボでは手順を簡素化する目的で、クラスタ内のストレージをバックアップターゲットとして使用しています。
+
+====
+
+== 2. バックアップ保存用の ObjectBucketClaim の設定
+
+====
+
+[NOTE]
+
+Kasten は Immutable Object Storage をサポートしており、誤削除やランサムウェア攻撃からバックアップを保護するために推奨されます。
+ このラボでは、権限の都合により Immutable 設定は行いません。
+
+====
+
+. まだ {openshift_console_url}[OpenShift コンソール^] にログインしていない場合は、今すぐログインします。
+
+.. ユーザーIDは `{user}`、パスワードは `{password}` です。
+
+. OpenShift のコマンドラインターミナルを開きます。
++
+
+image::module-02-location-profile/002.png[]
++
+
+[NOTE]
+初めてターミナルを開く場合は、最初に *プロジェクト作成* が表示されます。
+ プロジェクト名は `terminal-{user}` を指定し、あなた専用のプロジェクトを作成してください。
+ その後、青い *Start* ボタンをクリックします。
+
+
+image::module-02-location-profile/002a.png[]
+
+
+. `ObjectBucketClaim` はすでに作成済みです。以下のコマンドで確認します：
++
+
+[source,bash,role=execute,subs="attributes"]
+----
+
+oc describe objectbucketclaim -n backuptarget-{user} kastenbackups-{user}
+
+----
+
+. 次のコマンドでバケットの Access Key を取得します：
++
+
+[source,bash,role=execute,subs="attributes"]
+----
+
+oc get secret -n backuptarget-{user} kastenbackups-{user} \
+
+  -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 --decode && echo
+
+----
++
+
+取得した Access Key は後で使用するため、テキストエディタにコピーしておきます。
+
+. 次のコマンドでバケットの Secret Key を取得します：
++
+
+[source,bash,role=execute,subs="attributes"]
+----
+
+oc get secret -n backuptarget-{user} kastenbackups-{user} \
+
+ -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 --decode && echo
+
+----
++
+
+取得した Secret Key も後で使用するため、テキストエディタにコピーしておきます。
+
+== 3. S3-Compatible Location Profile の作成
+
+. *_Kasten Dashboard_* のサイドバーから *_Profiles → Location_* を選択し、*_+ Add New_* をクリックします。
++
+
+image::module-02-location-profile/01.png[]
+
+
+. 次のフィールドを入力して *_Next_* をクリックします：
++
+
+|===
+|  |
+
+
+| *_Location Profile Name_* 
+| `kastenbackups-{user}`
+
+
+| *_Storage Provider_* 
+| S3 Compatible
+|===
++
+
+image::module-02-location-profile/02.png[]
+
+
+. 次のフィールドを入力します（*_まだ Next はクリックしないでください_*）：
++
+
+|===
+|  |
+
+
+| *_S3 Access Key_* 
+| 取得した `ACCESS KEY` の値を貼り付け
+
+
+| *_S3 Secret_* 
+| 取得した `SECRET KEY` の値を貼り付け
+
+
+| *_Endpoint_* 
+| `{kasten_backup_bucket_host}`
+
+
+| *_Skip certificate chain and hostname verification_* 
+| `Checked`
+
+
+| *_Region_* 
+| `us-east-1`
+
+
+| *_Bucket_* 
+| `kastenbackups-{user}`
+|===
++
+
+image::module-02-location-profile/02b.png[]
+
+
+. *_Next_* をクリックし、続いて *_Submit_* をクリックして Location Profile を作成します。
++
+
+`kastenbackups-{user}` の Location Profile が *_Success_* ステータスで表示されるはずです。
++
+
+image::module-02-location-profile/05.png[]
++
+
+これでアプリケーションの保護を開始する準備が整いました！
+
+
+. 右上の *_..._* メニューから *_View YAML_* を選択し、ダッシュボードから Location Profile を作成した際に生成された Kubernetes オブジェクトの YAML を確認します。
++
+
+image::module-02-location-profile/06.png[]
++
+
+この例のとおり、Kasten の Location Profile は `kasten-io` Namespace に作成される `Profile` オブジェクトで表現され、
+ アクセスキーとシークレットキーを保存する Secret を参照します。
+ この Kubernetes ネイティブな実装により、GitOps アプローチでバックアップ先を簡単に構成できます。
++
+
+====
+[NOTE]
+
+Profile API オブジェクトの完全な仕様については、https://docs.kasten.io/latest/api/profiles.html[docs.kasten.io] を参照してください。
+====
+
+
+. YAML ウィンドウを閉じるには、*_Cancel_* または右上の *_X_* をクリックします。

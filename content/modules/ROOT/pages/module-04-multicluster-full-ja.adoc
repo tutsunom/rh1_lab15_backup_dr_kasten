@@ -1,0 +1,247 @@
+= Kasten マルチクラスター
+
+====
+[WARNING]
+
+このセクションは **手順の理解を目的とした説明のみ** です。Red Hat One のラボ環境は多数の受講者で **共有クラスター** を使用しているため、ここに記載の作業は実行できません。
+ただし、以降の説明を読み進めて、**Kasten でマルチクラスターのバックアップ／リストアを構成する方法** を把握してください。
+
+https://demo.redhat.com[Red Hat Demo Platform^] 上のデモ環境にはこの制限はありません。Red Hat One 修了後に同環境で自由にお試しください。
+====
+
+== 1. はじめに
+
+Veeam Kasten の各デプロイメントは、**他のインスタンスに依存せず** 完全に独立して動作します。
+そのため、追加の管理プレーン（SaaS/自前）を必要とせず、**GitOps スタイルの管理** や **完全なエアギャップ環境** でも利用できます。
+一方で Kasten には、複数デプロイメントにまたがる **グローバルな可観測性** と **集中管理** を提供する UI、*_Kasten Multi-cluster Manager_* が用意されています。
+
+'''
+_このモジュールでは、Multi-cluster Manager の概念を学び、プライマリー／セカンダリーの2クラスター構成を想定して、
+グローバルに定義した Location Profile を複数クラスターへ配布する手順を確認します。_
+====
+[IMPORTANT]
+
+このラボでは受講者あたり 1 クラスターのみが割り当てられています。ペアになり、一方を `cluster-1`、もう一方を `cluster-2` として読み進めてください。
+====
+
+== 2. プライマリークラスターの設定
+
+====
+[CAUTION]
+
+このセクションは `cluster-1` のユーザー *_のみ_* が実行してください。
+====
+
+*_Primary_* クラスタは、Policy や Profile などのすべてのグローバルリソースを定義・保存し、また https://docs.kasten.io/latest/operating/monitoring.html#k10-multi-cluster-metrics[クラスタメトリクスの一部を集約] して集中レポートを行います。
+
+. *_Kasten Dashboard_* で、サイドバーから *_Multi-Cluster_* を選択します。
+. *_Promote to Primary_* の下で *_Setup_* をクリックします。
++
+image::module-04-multicluster/02.png[]
+
+. *_Primary Name_* に `cluster-1` を指定し、*_Promote Cluster → Confirm_* をクリックします。
++
+image::module-04-multicluster/03.png[]
++
+セットアップが完了すると、*_Multi-cluster Manager_* のビューが表示されます。
++
+image::module-04-multicluster/04.png[]
++
+====
+[NOTE]
+
+Kasten クラスタは、Helm/Operand のパラメータを使用して宣言的に Primary クラスタとして昇格させることも可能です。詳細は https://docs.kasten.io/latest/multicluster/tutorials/getting_started.html#setting-up-the-primary-cluster-using-helm[docs.kasten.io] を参照してください。
+====
+
+. サイドバーから *_Join Tokens_* を選択し、*_+ Create New Join Token_* をクリックします。
++
+image::module-04-multicluster/05.png[]
+
+. *_Name_* に `lab-token` を指定し、*_Confirm_* をクリックします。
++
+image::module-04-multicluster/06.png[]
++
+====
+[NOTE]
+
+Join Token は、宣言的に作成できる Kubernetes Secret の一種です。例は https://docs.kasten.io/latest/multicluster/tutorials/getting_started.html#join-tokens[docs.kasten.io] を参照してください。
+
+1つのトークンは複数クラスタに使用できます。トークンを削除しても、すでにマルチクラスタに参加しているクラスタには影響しませんが、そのトークンを使って新たなクラスタが参加することはできなくなります。
+====
+
+. *_Copy_* をクリックしてトークン値をクリップボードにコピーし、以下のいずれかの方法で `cluster-2` のパートナーに送ります:
+ ** Email / Slack など
+ ** ゆっくり口頭で読み上げる 😡
+ ** ハト便 🪶
+ ** 付箋に書いて使用後に燃やす 🤷‍♂️
+ ** たぶん Email / Slack などを使うのが無難 👍
+ ** 実際の環境では、Vault + External Secrets Operator などの Kubernetes Secret 管理ソリューションを使って、トークン値をクラスタへ配布できます
+. *_Done_* をクリックします。
+
+== 3. セカンダリークラスターからの参加
+
+====
+[CAUTION]
+
+このセクションは `cluster-2` のユーザー *_のみ_* が実行してください。
+====
+
+. *_Kasten Dashboard_* で、サイドバーから *_Multi-Cluster_* を選択します。
+. *_Join a Multi-Cluster System_* の下で *_Join_* をクリックします。
++
+image::module-04-multicluster/07.png[]
+
+. Primary クラスタから取得した `lab-token` の値を *_Token_* フィールドに貼り付けます。
++
+====
+[NOTE]
+
+Join Token には、Secondary が Primary クラスタへ接続するために必要な Kasten Ingress URL もエンコードされています。  
+本番環境で別の URL が必要な場合は、UI 上でこの値を上書きできます。
+====
+
+. *_Local Cluster Name_* に `cluster-2` を指定し、*_Use Current_* をクリックして、現在の Kasten Route 値で *_Local Cluster Ingress_* を自動入力します。
++
+image::module-04-multicluster/08.png[]
+
+. *_Connect → Yes_* をクリックして `cluster-2` を参加させます。
++
+数秒後、Multi-Cluster ステータスページで、このクラスタが Primary としての `cluster-1` に接続されたことを確認できます。
++
+image::module-04-multicluster/09.png[]
++
+====
+[TIP]
+
+Secondary クラスタの参加は、GitOps スタイルのデプロイの一部として自動化することもできます。  
+その場合、`mc-join` Secret と `mc-join-config` ConfigMap を Secondary クラスタ上に作成し、Join Token と名前／Ingress の詳細を設定します。  
+詳細は https://docs.kasten.io/latest/multicluster/tutorials/getting_started.html#adding-a-secondary-cluster[docs.kasten.io] を参照してください。
+====
+
+== 4. グローバルリソースの管理
+
+====
+[CAUTION]
+
+このセクションは `cluster-1` のユーザー *_のみ_* が実行してください。
+====
+
+. `cluster-1` の *_Kasten Dashboard_* で、ドロップダウンメニューから *_Multi-Cluster Manager_* を選択し、*_Clusters_* ページに両方のクラスタが表示されていることを確認します。
++
+image::module-04-multicluster/10.png[]
+
+. *_Grant Permissions_* ボタンをクリックして、現在の *_Kasten Dashboard_* ユーザーの権限を設定します。
++
+これにより、現在および将来のすべての Kasten クラスタに対して、現在のユーザーに `k10-multi-cluster-admin` ClusterRole を付与するフォームが自動入力されます。
++
+image::module-04-multicluster/11.png[]
++
+====
+[NOTE]
+
+本番環境では、この設定を変更して、特定のクラスタ群に対してのみ権限を与えるなど、より細かい制御を行うことも可能です。
+====
+
+. デフォルト設定のまま *_Save_* をクリックします。
+. サイドバーから *_Clusters_* を選択し、`cluster-2` にアクセスできることを確認します。  
+サイドバーのドロップダウンメニューを使うと、利用可能なクラスタ間や *_Multi-Cluster Manager_* の間を移動できます。
++
+image::module-04-multicluster/12.png[]
+
+. *_Kasten Multi-Cluster Manager_* で、サイドバーから *_Global Profiles → Location_* を選択し、*_+ New Profile_* をクリックします。
++
+image::module-04-multicluster/13.png[]
+
+. 次の項目を入力して *_Next_* をクリックします。
++
+|===
+|  |
+
+| *_Profile Name_*  
+| `global-profile-example`
+
+| *_Storage Provider_*  
+| S3 Compatible
+|===
+
+. *_Web Terminal_* で、既存の Ceph Object Gateway バケットの詳細を取得するために次のコマンドを実行します。
++
+[,bash]
+----
+ export CEPH_S3_ENDPOINT="https://$(oc get route \
+   s3 -n openshift-storage -o jsonpath='{.spec.host}')"
+ export AWS_ACCESS_KEY_ID=$(oc get secret \
+   rook-ceph-object-user-ocs-storagecluster-cephobjectstore-ocs-storagecluster-cephobjectstoreuser \
+   -n openshift-storage -o jsonpath='{.data.AccessKey}' | base64 --decode)
+ export AWS_SECRET_ACCESS_KEY=$(oc get secret \
+   rook-ceph-object-user-ocs-storagecluster-cephobjectstore-ocs-storagecluster-cephobjectstoreuser \
+   -n openshift-storage -o jsonpath='{.data.SecretKey}' | base64 --decode)
+
+ printf '%s\n' 'ACCESS KEY:' ${AWS_ACCESS_KEY_ID} 'SECRET KEY:' ${AWS_SECRET_ACCESS_KEY} 'ENDPOINT:' ${CEPH_S3_ENDPOINT}
+----
+
+. *_Kasten Multi-Cluster Manager_* に戻り、以下の項目を入力します。
++
+|===
+|  |
+
+| *_S3 Access Key_*  
+| `ACCESS KEY` の値を貼り付け
+
+| *_S3 Secret_*  
+| `SECRET KEY` の値を貼り付け
+
+| *_Endpoint_*  
+| `ENDPOINT` の値を貼り付け
+
+| *_Region_*  
+| `us-east-1`
+
+| *_Bucket_*  
+| `kasten`
+|===
++
+image::module-04-multicluster/14.png[]
+
+. *_Next → Submit_* をクリックします。
+. サイドバーから *_Distributions_* を選択し、*_+ New Distribution_* をクリックします。
++
+Distribution は、どのグローバルリソースをどのクラスタと同期するかを定義します。これにより、管理者はラベルベースのルールを設定し、新しくマルチクラスタに参加する Kasten インストールへのリソース配布を自動化できます。
+
+. 次の項目を入力します。
++
+|===
+|  |
+
+| *_Name_*  
+| `example-distribution`
+
+| *_Clusters_*  
+| `dist.kio.kasten.io/cluster-type:primary` を選択  
+| `dist.kio.kasten.io/cluster-type:secondary` を選択
+
+| *_Resources_*  
+| `global-profile-example` を選択
+|===
++
+image::module-04-multicluster/15.png[]
++
+この設定により、`global-profile-example` Location Profile が、現在および将来のすべての Kasten クラスタに同期されます。
+
+. *_Add Distribution_* をクリックします。
++
+選択したクラスタに Distribution が同期されたことを確認できます。
++
+image::module-04-multicluster/16.png[]
++
+====
+[TIP]
+
+*_Multi-Cluster_* ステータスページから、各クラスタのグローバルリソース概要を確認できます（下図参照）。
+
+image::module-04-multicluster/17.png[]
+====
+== 5. まとめ
+
+* Kasten Multi-Cluster Manager は、複数の Kasten デプロイメントを単一のインターフェースから管理するための仕組みを提供します。
+* Kasten のポリシーやプロファイルは中央で定義でき、変更管理の簡素化や大規模環境での一貫性確保に役立ちます。
