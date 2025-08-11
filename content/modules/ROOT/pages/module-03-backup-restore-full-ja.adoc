@@ -42,7 +42,7 @@ image::module-03-backup-restore/05.png[]
 +
 image::module-03-backup-restore/06.png[]
 
-== 3. ブロックモードエクスポートの有効化
+== 3. Block モードエクスポートの有効化
 
 ====
 [NOTE]
@@ -51,7 +51,7 @@ image::module-03-backup-restore/06.png[]
 このラボでは、`openshift-storage.rbd.csi.ceph.com` プロビジョナーが互換性を持つことが分かっているため、この確認は省略します。
 ====
 
-. あなたの `StorageClass` はすでに、`{kasten_storageclass}` StorageClass を使用して Kasten データムーバーが生のブロックボリュームをエクスポートできるよう設定されています。
+. あなたの `StorageClass` はすでに、`{kasten_storageclass}` StorageClass を使用して Kasten Data Mover が生のブロックボリュームをエクスポートできるよう設定されています。
 +
 *_Web Terminal_* で次のコマンドを実行し、`k10.kasten.io` で始まるアノテーションが存在することを確認します。
 +
@@ -215,6 +215,7 @@ image::module-03-backup-restore/18.png[]
 ====
 [WARNING]
 失敗した場合はエラーメッセージを確認してください。
+
 image::module-03-backup-restore/18b.png[]
 ====
 
@@ -278,6 +279,7 @@ oc delete project kasten-lab-{user}
 ====
 [IMPORTANT]
 _"スナップショットはバックアップではない"_ — Mark Twain  
+
 VolumeSnapshot は namespace に属するため、namespace 削除時に消えます。
 Ceph の `deletionPolicy: Delete` 設定によりスナップショット自体も削除されます。
 ====
