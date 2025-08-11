@@ -70,7 +70,7 @@ Join Token は、宣言的に作成できる Kubernetes Secret の一種です�
 . *_Copy_* をクリックしてトークン値をクリップボードにコピーし、以下のいずれかの方法で `cluster-2` のパートナーに送ります:
  ** Email / Slack など
  ** ゆっくり口頭で読み上げる 😡
- ** ハト便 🪶
+ ** 伝書鳩 🪶
  ** 付箋に書いて使用後に燃やす 🤷‍♂️
  ** たぶん Email / Slack などを使うのが無難 👍
  ** 実際の環境では、Vault + External Secrets Operator などの Kubernetes Secret 管理ソリューションを使って、トークン値をクラスタへ配布できます
