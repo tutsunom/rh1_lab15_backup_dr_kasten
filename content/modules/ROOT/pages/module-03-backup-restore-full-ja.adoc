@@ -19,7 +19,7 @@ image::module-03-backup-restore/01.png[]
 +
 image::module-03-backup-restore/03.png[]
 +
-. Fedora テンプレートを選択して *_Customize virtual machine*_ をクリックします。
+. Fedora テンプレートを選択して *_Customize virtual machine_* をクリックします。
 +
 image::module-03-backup-restore/04.png[]
 +
@@ -62,11 +62,12 @@ oc get sc {kasten_storageclass} -ojsonpath=='{.metadata.annotations}';echo
 oc annotate storageclass {kasten_storageclass} \
   k10.kasten.io/sc-supports-block-mode-exports=true
 ----
+
 ====
-+
 Kasten には標準で、`volumeMode: Block` の PVC をバックアップする際に、データムーバーがネイティブ API（例：Ceph RBD）と直接連携して高スループットでデータを取り出す仕組みが含まれています。これにより、仮想マシン保護時のストレージ消費と転送コストを大幅に抑制できます。
-+
 ====
+
+
 [IMPORTANT]
 
 多くの Kubernetes バックアップ製品はローカルスナップショットのオーケストレーションは可能ですが、`volumeMode: Block` の PVC に対する**リモートへのインポート／エクスポート（クラスター外へのデータ移送）**を効率的に行えることが重要です。
