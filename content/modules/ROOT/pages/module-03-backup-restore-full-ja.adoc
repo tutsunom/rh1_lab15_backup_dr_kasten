@@ -65,8 +65,6 @@ oc annotate storageclass {kasten_storageclass} \
 
 ====
 Kasten には標準で、`volumeMode: Block` の PVC をバックアップする際に、データムーバーがネイティブ API（例：Ceph RBD）と直接連携して高スループットでデータを取り出す仕組みが含まれています。これにより、仮想マシン保護時のストレージ消費と転送コストを大幅に抑制できます。
-====
-
 
 [IMPORTANT]
 
