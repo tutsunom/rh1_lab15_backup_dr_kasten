@@ -88,7 +88,7 @@ spec:
   auth:
     openshift:
       enabled: true
-      dashboardURL: https://k10-route-kasten-io.apps.YOUR-WORKSHOP-ID.dynamic.redhatworkshops.io/k10
+      dashboardURL: https://k10-route-kasten-io.apps.cluster-<YOUR-WORKSHOP-ID>.<YOUR-WORKSHOP-ID>.gcp.redhatworkshops.io/k10
       openshiftURL: https://apiserver.openshift-kube-apiserver.svc.cluster.local
       insecureCA: true
   route:
@@ -97,7 +97,7 @@ spec:
       enabled: true
 ----
 
-. `YOUR-WORKSHOP-ID` をラボ環境 DNS の 5 文字の識別子に置き換えます（下図参照）。
+. `<YOUR-WORKSHOP-ID>` をラボ環境 DNS の 5 文字の識別子に置き換えます（下図参照）。
 +
 image::module-01-install/05b.png[]
 +
