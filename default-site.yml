@@ -1,6 +1,6 @@
 ---
 site:
-  title: Lab 15 - Backup/DR with Veeam Kasten K10
+  title: Backup/DR with Veeam Kasten K10
   start_page: modules::index.adoc
 
 content:
