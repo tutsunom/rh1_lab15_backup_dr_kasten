@@ -1,142 +1,175 @@
-
 = 仮想マシンの保護
 
 == 1. はじめに
 
-_この演習では、OpenShift 上で稼働する仮想マシンを保護するための Kasten ポリシーを作成して実行し、ローカルおよびリモートのバックアップソースからのリストアをテストします。_
+_この演習では、OpenShift 上で稼働する仮想マシンを保護するための Kasten ポリシーを作成・実行し、ローカルおよびリモートのバックアップソースからのリストアをテストします。_
 
 == 2. 仮想マシンの作成
 
-この演習で使用するために、新しいプロジェクトで新しい VM を作成します。
+まず、この演習で使用する新しい VM を新しいプロジェクトに作成します。
 
-. *_OpenShift コンソール_* で *_Virtualization_* → *_Virtual Machines_* に移動します。
-. 作業用の新しいプロジェクトを作成するには、*_Project_* メニューで *_Create Project_* をクリックします。
+. *_OpenShift コンソール_* で、*_Virtualization_* → *_Virtual Machines_* に移動します。
+. 作業用の新しいプロジェクトを作成するには、*_Project_* メニューを選択し、*_Create Project_* をクリックします。
 +
 image::module-03-backup-restore/01.png[]
-+
-. *_Name_* に `kasten-lab-{user}` を指定し、*_Create_* をクリックします。
-. サイドバーから *_Virtualization → Virtual Machines_* を選択し、`kasten-lab-{user}` プロジェクトで *_Create VirtualMachine → From template_* をクリックします。
+
+. *_Name_* に `kasten-lab-{user}` と入力し、*_Create_* をクリックします。
+. サイドバーで *_Virtualization → Virtual Machines_* を選択し、`kasten-lab-{user}` プロジェクト内で *_Create VirtualMachine → From template_* をクリックします。
 +
 image::module-03-backup-restore/03.png[]
 +
-. Fedora テンプレートを選択して *_Customize virtual machine_* をクリックします。
+====
+[CAUTION]
+Kasten は `InstanceType` を使用してプロビジョニングされた VM を保護できますが、現在はリストア時に手動変換が必要です。この作業はこのラボの範囲外です。
+今後のリリースで `InstanceType` の完全サポートが追加される予定です。
+====
+
+. *_Template catalog_* から `fedora-server-small` テンプレートを選択します。
 +
 image::module-03-backup-restore/04.png[]
-+
-. *_VirtualMachine name_* を `fedora-k10` に更新し、*_Quick create VirtualMachine_* をクリックします。
+
+. *_VirtualMachine name_* を `fedora-k10` に変更し、*_Quick create VirtualMachine_* をクリックします。
 +
 image::module-03-backup-restore/05.png[]
 +
 ====
 [NOTE]
-
-この操作により、OpenShift Virtualization 向けの推奨ストレージ設定で VM がプロビジョニングされ、OpenShift ノード間の Live Migration を有効化するために必要な `Block` アクセスが設定されます。
+これにより、`{kasten_storageclass}` StorageClass 用に推奨されるストレージ設定で VM がプロビジョニングされます。
+具体的には *_Block VolumeMode_* が設定され、OpenShift ノード間でのライブマイグレーションに必要な *_ReadWriteMany_* アクセスが有効になります。
 ====
 
-. サイドバーの *_Storage → PersistentVolumeClaims_* から `fedora-k10-volume` PersistentVolumeClaim の構成を確認します。
+. サイドバーから *_Storage → PersistentVolumeClaims_* に移動し、`fedora-k10-volume` PersistentVolumeClaim の設定を確認します。
 +
 image::module-03-backup-restore/06.png[]
 
-== 3. Block モードエクスポートの有効化
+== 3. ブロックモードエクスポートの有効化
 
 ====
 [NOTE]
-
-一部のストレージプロビジョナーは `volumeMode: Block` の PVC を完全にはサポートしていない可能性があります。事前検証には https://docs.kasten.io/latest/tools/primer_tools.html#k10-primer-block-mount-check[primer スクリプト] の実行が有効です。
-本ラボでは `openshift-storage.rbd.csi.ceph.com` プロビジョナーが互換であることが既知のため、このチェックは省略します。
+一部のストレージプロビジョナーでは Block VolumeMode が完全にサポートされない場合があります。
+まず StorageClass が互換性を持つかどうかを https://docs.kasten.io/latest/operating/k10tools.html#k10-primer-block-mount-check[primer スクリプト] で確認してください。
+このラボでは、`openshift-storage.rbd.csi.ceph.com` プロビジョナーが互換性を持つことが分かっているため、この確認は省略します。
 ====
 
-. すでに `StorageClass` は、`{kasten_storageclass}` を使用して Raw Block ボリュームのエクスポートを許可するよう構成済みです。以下で注釈を確認します。
+. あなたの `StorageClass` はすでに、`{kasten_storageclass}` StorageClass を使用して Kasten データムーバーが生のブロックボリュームをエクスポートできるよう設定されています。
 +
-*_Web Terminal_* で次のコマンドを実行して StorageClass の注釈を確認します（`k10.kasten.io` で始まる注釈が見えるはずです）。
+*_Web Terminal_* で次のコマンドを実行し、`k10.kasten.io` で始まるアノテーションが存在することを確認します。
 +
 [source,bash,role=execute,subs="attributes"]
 ----
 oc get sc {kasten_storageclass} -ojsonpath=='{.metadata.annotations}';echo
 ----
 +
-必要であれば、次のコマンドで注釈を付与できます：
-+
-[source,bash,role=execute,subs="attributes"]
+====
+[TIP]
+アノテーションを付与するコマンドは以下です（実行する必要はありません）:
+
+[source,bash]
 ----
 oc annotate storageclass {kasten_storageclass} \
   k10.kasten.io/sc-supports-block-mode-exports=true
 ----
-
 ====
-Kasten には標準で、`volumeMode: Block` の PVC をバックアップする際に、データムーバーがネイティブ API（例：Ceph RBD）と直接連携して高スループットでデータを取り出す仕組みが含まれています。これにより、仮想マシン保護時のストレージ消費と転送コストを大幅に抑制できます。
 
+. Kasten はデフォルトで ODF の Ceph Volume Manager と直接 API 連携し、ブロックデータの転送を行います。
+これには VM 保護時のストレージ消費量を削減できる増分バックアップのサポートも含まれます。
++
+====
 [IMPORTANT]
-
-多くの Kubernetes バックアップ製品はローカルスナップショットのオーケストレーションは可能ですが、`volumeMode: Block` の PVC に対する**リモートへのインポート／エクスポート（クラスター外へのデータ移送）**を効率的に行えることが重要です。
-この機能は現在、Velero や OADP には *存在しません*。
+多くの Kubernetes バックアップソリューションは `volumeMode: Block` PVC のローカル CSI スナップショットをオーケストレーションできますが、_スナップショットはバックアップではありません_。
+`volumeMode: Block` PVC のオフクラスタデータ転送ができるバックアップソリューションが重要です。
+Velero や OADP ではこの機能は現在サポートされていません。
 ====
 
 == 4. Kasten ポリシーの作成
 
-. *_Kasten Dashboard_* で *_Applications_* を選択し、検出された Namespace の一覧を表示します。
+. *_Kasten Dashboard_* で *_Applications_* を選択し、検出されたすべての namespace を表示します。
 +
 image::module-03-backup-restore/07.png[]
 +
-. `kasten-lab-{user}` アプリケーションは *_Unmanaged_* と表示され、まだいずれのポリシーでも保護されていないことを示します。
+`kasten-lab-{user}` アプリケーションが *_Unmanaged_* と表示されているはずです。
+これはまだポリシーで保護されていないことを意味します。
 +
 ====
 [TIP]
-
-一覧に `openshift` で始まる Namespace が表示されていないことに気付くはずです。  
-`+openshift-...+` などのシステム Namespace は、K10 Operand の `spec` に `excludedApps` のリストを設定することで除外できます（例：
+`openshift` で始まる namespace がアプリケーション一覧に表示されることがありますが、これらは OpenShift システム自身のアプリが稼働する namespace です。
+通常は一般ユーザには見せないようにすることが多いです。
+これは、K10 Operand の `spec` に `excludedApps` リストを追加することで除外できます。
 image::module-03-backup-restore/08.png[]
-）。
+以下のコマンドで `openshift` で始まる namespace の一覧を取得し、K10 Operand の YAML に貼り付けることができます。
+[source,bash,role=execute,subs="attributes"]
+----
+oc get ns --no-headers=true | \
+  awk 'BEGIN { print "  excludedApps:" } /^openshift/{print "  -",$1}'
+----
 ====
 
-. `kasten-lab-{user}` の *_Protect_* をクリックします。
+. *_Applications_* の一覧で `kasten-lab-{user}` をクリックし、検出されたワークロードとリソースの詳細を表示します。
 +
 image::module-03-backup-restore/09.png[]
-+
-. 次のように設定します：
-+
-* *_Backup frequency_*：`Hourly`
-* *_Enable Snapshot_*（有効にする）
-* *_Enable Export_*（有効にする）
-* *_Location Profile_*：`kastenbackups-{user}` を選択
+
+. *_Application Details_* ウィンドウを閉じます。
+. `kasten-lab-{user}` の右側で *_... → Create a Policy_* を選択します。
 +
 image::module-03-backup-restore/10.png[]
-+
-. *_Create New Policy_* をクリックして、ポリシー名を `kasten-lab-backup-{user}` とします（既定のままでも可）。
+
+. *_Name_* と *_Action_* はデフォルトのままにします。
 +
 image::module-03-backup-restore/11.png[]
 +
-. *_Next_* をクリックします。
+====
+[NOTE]
+ポリシープリセットを使用すると、管理者が SLA ベースの構成を事前定義し、他のユーザーによるセルフサービスでのデータ保護を簡素化できます。
+====
+
+. *_Hourly Backup Frequency_* と *_Snapshot Retention_* もデフォルトのままにします。
 +
 image::module-03-backup-restore/12.png[]
 +
-. 対象アプリケーションに `kasten-lab-{user}` を選択し、*_Add to Policy_* をクリックします。
+====
+[NOTE]
+*_Advanced Frequency Options_* では、スナップショットの実行時刻や回数、日次/週次/年次への昇格ルールを細かく設定できます。
+*_Backup Window_* ではポリシーの実行可能時間帯を指定できます。
+*_Use Staggering_* を有効にすると負荷分散が可能です。
+このラボではこれらは設定しません。
+====
+
+. *_Enable Backups via Snapshot Exports_* を有効にし、*_Export Location Profile_* に `kastenbackups-{user}` を選択します。
 +
 image::module-03-backup-restore/13.png[]
 +
 ====
 [NOTE]
-
-Kasten のアプリケーション選択は Namespace 単位だけでなく、より細かい単位（例：*_API Group_*、*_Version_*、*_Resource Type_*、*_Resource Name_*、*_Labels_*）でのフィルタリングにも対応します。  
-たとえば、ラベルに「外部管理を示す目印」が付いている *_Secrets_* リソースを除外する、といった制御が可能です。
+デフォルトではスナップショット全体がエクスポートされますが、場合によってはスナップショットのメタデータのみをエクスポートすることも可能です。
+これは特定のシナリオでパフォーマンスを大幅に向上させます。
 ====
 
-. 残りの設定は既定値のままとします。
+. *_Select Applications_* で `kasten-lab-{user}` namespace が選択されていることを確認します。
++
+image::module-03-backup-restore/14.png[]
++
+====
+[NOTE]
+通常は namespace 単位でポリシー対象を決めますが、Kasten は Kubernetes ラベルによる選択も可能です。
+これにより将来追加される VM を自動的に保護する設定も可能です。
+また API Group やリソースタイプによる除外もできます。
+====
+
+. 残りの設定はデフォルトのままにします。
 +
 ====
 [TIP]
-
-Kasten の UI で多くの操作を行うと、UI で作成したリソースを表す Kubernetes の YAML をプレビューできます。  
-これは Kubernetes オブジェクトへの理解を深めたり、GitOps / IaC ツール向けのスニペットとして活用したりするのに役立ちます。
+Kasten UI の多くの操作では *_</> YAML_* ボタンで Kubernetes ネイティブの YAML を表示できます。
 ====
 
 . *_Create Policy_* をクリックします。
 
 == 5. ゲストファイルシステムのフリーズ
 
-Kasten はスナップショット取得の前にゲストファイルシステムをフリーズできます。これを有効化するには、VirtualMachine リソースに `k10.kasten.io/freezeVM=true` 注釈を付与します。
+Kasten はスナップショットの前後にゲスト OS のファイルシステムをフリーズ/アンフリーズできます。  
+VM に `k10.kasten.io/freezeVM=true` アノテーションを付けることで有効になります。
 
-. *_Web Terminal_* で `fedora-k10` のファイルシステムフリーズを有効にします：
+. *_Web Terminal_* で以下を実行します。
 +
 [source,bash,role=execute,subs="attributes"]
 ----
@@ -147,142 +180,143 @@ oc annotate virtualmachine fedora-k10 \
 +
 ====
 [NOTE]
-
-フリーズ／アンフリーズは、VirtualMachine が *_Running_* 状態の場合にのみ試行されます。
+フリーズ/アンフリーズは VM が *_Running_* 状態のときのみ実行されます。
 ====
 +
 ====
 [WARNING]
-
-Kasten ではスナップショット・オーケストレーション時のデフォルトタイムアウトが 5 分に設定されています。フリーズ状態のまま時間が超過した場合、スナップショットは中止され、VM はアンフリーズされます。  
-この値は `kubeVirtVMs.snapshot.unfreezeTimeout`（Helm/Operand パラメータ）で上書き可能です。
+デフォルトでは 5 分でスナップショットが完了しない場合は中断して VM をアンフリーズします。
+`kubeVirtVMs.snapshot.unfreezeTimeout` で変更可能です。
 ====
 
 == 6. ポリシーの実行
 
-ポリシーの定時スケジュール（毎正時まで待つ）のではなく、手動でポリシー実行を開始します（UI から、またはプログラム的に実行できます）。
+ポリシーは UI またはプログラムから手動で実行可能です。
 
-. *_Kasten Dashboard → Policies → Policies_* で、`kasten-lab-backup-{user}` ポリシーの *_Run Once_* をクリックします。
+. *_Kasten Dashboard → Policies → Policies_* で `kasten-lab-backup-{user}` の *_Run Once_* をクリックします。
 +
 image::module-03-backup-restore/15.png[]
 
-. 任意で、この手動バックアップに有効期限を指定してから *_Yes, Continue_* をクリックし、バックアップを開始します。
+. 有効期限を指定する場合は設定し、*_Yes, Continue_* をクリックします。
 +
 image::module-03-backup-restore/16.png[]
 
 . サイドバーから *_Dashboard_* を選択します。
-. *_Actions_* 内の `kasten-lab-backup-{user}` の Policy Run を選択し、進行状況を監視します。
+. *_Actions_* で `kasten-lab-backup-{user}` の実行状況を確認します。
 +
 image::module-03-backup-restore/17.png[]
 +
-各 *_Action_* をクリックすると、関連するログや詳細を確認できます。  
-エクスポートのステップでは、Kasten データムーバーによって Location Profile へ転送されたデータ量などが表示されます。
+各 *_Action_* をクリックすると YAML や保護されたボリューム情報が見られます。
 +
 image::module-03-backup-restore/18.png[]
 
-. 次に進む前に *_Policy Run_* の完了を待ちます。通常、バックアップ完了まで 5 分未満です。
+. バックアップ完了まで待ちます（約5分以内）。
 +
 ====
 [WARNING]
-
-エラーで失敗した場合は、表示されるエラーメッセージを確認し、原因を特定してください。
- 
+失敗した場合はエラーメッセージを確認してください。
 image::module-03-backup-restore/18b.png[]
 ====
 
 == 7. ローカルリストアの実行
 
-アプリケーションの Namespace が存続しており、ローカルスナップショットが利用できる場合は、Kasten はスナップショットから迅速に復元できます。  
-リモートリポジトリからのデータ転送が不要なため、復元が高速です。
+同一クラスタ内でのリストアではローカル RestorePoint を選択するのが最速です。
 
-. *_Kasten Dashboard_* のサイドバーで *_Applications_* を選択します。
+. *_Kasten Dashboard_* の *_Applications_* を開きます。
 +
-`kasten-lab-{user}` の *_Status_* がバックアップ方針に準拠していること（例：過去 1 時間以内に作成されたバックアップが存在すること）を確認します。
- 
-. `kasten-lab-{user}` の下で *_... → Restore_* を選択します。
+`kasten-lab-{user}` の *_Status_* が *_Compliant_* に変わっているはずです。
+
+. `kasten-lab-{user}` の右側で *_... → Restore_* を選択します。
 +
 image::module-03-backup-restore/19.png[]
 
-. もっとも新しい RestorePoint を選択し、表示されるローカル（スナップショット）バージョンをクリックします。
+. 最新の RestorePoint を選び、ローカル版をクリックします。
 +
 image::module-03-backup-restore/20.png[]
-+
-. 復元オプションで次を確認します：
-+
-* 復元先 Namespace：`kasten-lab-{user}`（同一 Namespace にインプレース復元）
-* VM 名：`fedora-k10`（既定のまま）
-* ボリュームのソース：`Local Snapshot`
+
+. デフォルト設定のまま *_Restore_* をクリックします。
 +
 image::module-03-backup-restore/21.png[]
 +
-. *_Restore_* をクリックして実行します。
+====
+[WARNING]
+Kasten は実行中の VM を終了し、既存リソースを上書きします。
+ただし RestorePoint にないリソースは削除されません。
+====
+
+. 確認画面で *_Restore_* をクリックします。
 +
-復元の進行は *_Dashboard_* や Restore の詳細画面から確認できます。
+image::module-03-backup-restore/21a.png[]
+
+. *_Dashboard_* に戻って進捗を確認します。
+
+. 完了後、*_OpenShift Console → Virtualization → Virtual Machines_* に戻り `fedora-k10` が *_Running_* であることを確認します。
 +
 image::module-03-backup-restore/22.png[]
 +
 ====
 [NOTE]
-
-復元された PVC のソースを次のコマンドで確認できます：
-
+以下で DataSource が `k10-csi-snap-...` になっていることを確認できます。
 [source,bash,role=execute,subs="attributes"]
 ----
 oc describe pvc fedora-k10 -n kasten-lab-{user}
 ----
-
-ボリュームの *_DataSource_* が `+k10-csi-snapshot+` を指していれば、ローカルスナップショットから復元されたことを意味します。
 ====
 
 == 8. リモートリストアの実行
 
-ローカルのスナップショットデータが利用できない場合、リモートの Kasten リポジトリ（Location Profile）からデータを復元する必要があります。
+ローカルスナップショットが利用できない場合はリモートリポジトリから復元します。
 
-. *_Web Terminal_* で、`kasten-lab-{user}` Namespace を削除します（VM も先に削除します）。
+. *_Web Terminal_* で以下を実行し、namespace を削除します。
 +
 [source,bash,role=execute,subs="attributes"]
 ----
 oc delete virtualmachine fedora-k10 -n kasten-lab-{user}
-
 oc delete project kasten-lab-{user}
 ----
 +
 ====
 [IMPORTANT]
-
-Namespace を削除すると、その Namespace 内のオブジェクト（VM、PVC など）も削除されます。ここではリモートからの復元を検証するため、意図的に環境を空にします。
+_"スナップショットはバックアップではない"_ — Mark Twain  
+VolumeSnapshot は namespace に属するため、namespace 削除時に消えます。
+Ceph の `deletionPolicy: Delete` 設定によりスナップショット自体も削除されます。
 ====
 
-. *_Kasten Dashboard_* に戻り、*_Applications_* → *_... → Restore_* を選択します。
-. 最新の RestorePoint を選び、今度は *_Remote_*（オブジェクトストアのバックアップ）を選択します。
+. *_Kasten Dashboard_* → *_Applications_* に戻り、`kasten-lab-{user}` が消えていることを確認します。
+
+. *_All_* ドロップダウンから *_Removed_* を選びます。
 +
 image::module-03-backup-restore/23.png[]
-+
-. 復元設定で次のように指定します：
-+
-* 復元先 Namespace：`kasten-lab-clone-{user}`（新規に作成されます）
-* VM 名：`fedora-k10`
-* ボリュームのソース：`Remote Backup`（Location Profile からのデータムーブ）
+
+. `kasten-lab-{user}` の右で *_... → Restore_* を選択します。
+. 最新の RestorePoint の *_EXPORTED_* 版を選択します。
 +
 image::module-03-backup-restore/24.png[]
-+
-. *_Restore_* をクリックして実行します。
+
+. *_Application Name_* の欄で *_+ Create New Namespace_* をクリックし、`kasten-lab-clone-{user}` を入力して *_Create_* をクリックします。
 +
 image::module-03-backup-restore/25.png[]
 +
-. 復元ジョブの進行を確認し、完了したら *_Applications_* に `kasten-lab-clone-{user}` が表示されることを確認します。
+====
+[WARNING]
+必ず緑の *_Create_* ボタンをクリックしてください。
+====
+
+. *_Restore_* をクリックし、確認画面でも再度 *_Restore_* をクリックします。
++
+image::module-03-backup-restore/25a.png[]
+
+. *_Dashboard_* で進捗を確認します。
 +
 image::module-03-backup-restore/26.png[]
-+
-. *_OpenShift Console → Virtualization → Virtual Machines_* に戻り、`kasten-lab-clone-{user}` Namespace で `fedora-k10` VirtualMachine が起動していることを確認します。
+
+. *_OpenShift Console → Virtualization → VirtualMachines_* で、`kasten-lab-clone-{user}` namespace に `fedora-k10` VM が稼働していることを確認します。
 +
 image::module-03-backup-restore/27.png[]
 +
 ====
 [NOTE]
-
-ローカルリストアとは異なり、Kasten データムーバーによって作成された PVC には *_DataSource_* スナップショット参照は含まれません（リモートからのデータ転送で内容が埋め戻されるため）。
-
+ローカルリストアと異なり、PVC に DataSource のスナップショット参照はありません。
 [source,bash,role=execute,subs="attributes"]
 ----
 oc describe pvc fedora-k10 -n kasten-lab-clone-{user}
@@ -291,12 +325,12 @@ oc describe pvc fedora-k10 -n kasten-lab-clone-{user}
 
 == 9. まとめ
 
-_これで、最初の仮想マシンを保護し、ローカルおよびリモート双方からの復元を完了しました。_  
-ここまでのラボで扱った要点は次のとおりです：
+_おめでとうございます！ Veeam Kasten を使用して初めてのワークロードの保護と復元を行いました！_  
+このラボで学んだ主なポイントは以下の通りです。
 
-* Kasten はクラスタ上で動作し、OperatorHub または Helm チャートでデプロイできます。
-* Kasten は複数の認証方式（Tokens、OpenShift OAuth など）と RBAC をサポートし、Namespace 単位のセルフサービスも提供可能です。
-* Kasten は S3、Azure Blob、Google Cloud Storage、NFS、Veeam Backup & Replication へのバックアップをサポートします。
-* Immutable バックアップにより、誤操作や悪意ある削除からバックアップデータを保護し、ランサムウェア対策として重要な防御層を提供します。
-* `volumeMode: Block` のボリュームは、`ReadWriteMany` を提供できる構成が可能で、OpenShift Virtualization の Live Migration を有効化する選択肢となります。
-* Kasten は `Filesystem` と `Block` の両方のボリュームに対し、常に増分バックアップを実行します。
+* Kasten はクラスタ上で動作し、OperatorHub または Helm チャートでデプロイ可能
+* 認証は Token、OIDC、LDAP、OpenShift OAuth に対応し、Kubernetes RBAC により名前空間単位のセルフサービスも可能
+* バックアップ先として S3、Azure Blob、Google Cloud Storage、NFS、Veeam Backup & Replication をサポート
+* イミュータブルバックアップでランサムウェアから保護
+* Ceph RBD の `Block` モードは Live Migration に最適
+* Kasten は常に増分バックアップを行い、`Filesystem` と `Block` の両方に対応
