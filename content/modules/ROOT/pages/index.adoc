@@ -1,53 +1,65 @@
-= Welcome to {lab_name}!
+= {lab_name} へようこそ！
 
-== Introduction
+== はじめに
 
-OpenShift Virtualization enables you to bring virtual machines onto a modern, Kubernetes-based infrastructure. It enables the development and delivery of new applications as well as the modernization of existing ones and can create applications that consist of virtual machines, containers, and serverless functions - all managed together using Kubernetes-native tools and paradigms.
+OpenShift Virtualization を利用すると、仮想マシンを最新の Kubernetes ベースのインフラに移行できます。  
+これにより、新しいアプリケーションの開発・提供だけでなく、既存アプリケーションのモダナイズも可能になります。  
+また、仮想マシン・コンテナ・サーバーレス関数を組み合わせたアプリケーションを作成し、Kubernetes ネイティブのツールやパラダイムを使って一元管理できます。
 
-In this lab we will explore disaster recovery, backup and restore of Virtual Machines using the Veeam Kasten K10 product.
+このラボでは、Veeam Kasten K10 製品を使用して、仮想マシンのディザスタリカバリー、バックアップ、リストアを実践します。
 
-== What Content Is Covered In The Lab?
+== このラボで扱う内容
 
-These are the *five* main sections that will be covered:
+このラボでは、次の *5つ* の主要なセクションを学びます。
 
-* _Installing Veeam Kasten_: In this section we will provide a review of how to install the product on any OpenShift cluster. Since the product is already installed in the lab environment this sectionwill be a review only.
+* _Veeam Kasten のインストール_  
+  このセクションでは、任意の OpenShift クラスタに製品をインストールする方法を解説します。  
+  なお、本ラボ環境ではすでに製品がインストールされているため、解説のみとなります。
 
-* _Creating Location Profiles_: In this section, we will use setup the Kasten K10 product with a location profile to specify storage for the virtual machine backups.
+* _ロケーションプロファイルの作成_  
+  このセクションでは、仮想マシンのバックアップ先ストレージを指定するロケーションプロファイルを Kasten K10 に設定します。
 
-* _Protecting Virtual Machines_: In this section we will perform several backup and restore operations with virtual machines.
+* _仮想マシンの保護_  
+  このセクションでは、仮想マシンに対して複数のバックアップおよびリストア操作を実行します。
 
-* _Optional: Configuring Multi Cluster_: In this section you will learn how to set up Kasten Multi-Cluster Manager. Since our lab environment is a single cluster this section will be review only.
+* _オプション: マルチクラスタの設定_  
+  このセクションでは、Kasten Multi-Cluster Manager の設定方法を学びます。  
+  本ラボ環境は単一クラスタ構成のため、解説のみとなります。
 
-* _Optional: Migrating Workloads_: This section addresses restoring backups to different clusters. Since our lab environment is a single cluster this section will be review only.
+* _オプション: ワークロードの移行_  
+  このセクションでは、バックアップを別のクラスタにリストアする方法を解説します。  
+  本ラボ環境は単一クラスタ構成のため、解説のみとなります。
 
-== Version Information
+== バージョン情報
 
-This edition of the lab has been developed using the following software versions:
+このラボは以下のソフトウェアバージョンで構築されています。
 
 * Red Hat OpenShift 4.16.x
 * Red Hat OpenShift Virtualization 4.16.x
 * Veeam Kasten K10 7.0.12
 
-== Requirements for the Lab Environment
+== ラボ環境の要件
 
-* Participant needs to have their own computer with browser and internet access.
-* Chromium based browsers are recommended as some copy/paste functions don't work in Firefox for the time being.
-* Remote access console uses the US keyboard layout by default, so it's good to know where special characters reside for other country's layouts, or to use the copy/paste function in a supported browser.
+* ブラウザーとインターネットにアクセス可能な PC を各参加者が用意してください。
+* 一部のコピー＆ペースト機能が Firefox では動作しないため、Chromium ベースのブラウザーの利用を推奨します。
+* リモートアクセスコンソールはデフォルトで米国キーボード配列を使用します。  
+  他国のキーボードレイアウトを使用する場合は、特殊文字の位置を把握するか、サポートされているブラウザーでコピー＆ペースト機能を利用してください。
 
-=== Credentials for the OpenShift Console
+=== OpenShift コンソールの認証情報
 
-* Your OpenShift cluster console is available {openshift_console_url}[here^].
-* Your Kasten K10 Dashboard is available {kasten_dashboard}[here^].
+* OpenShift クラスタコンソール: {openshift_console_url}[こちら^]  
+* Kasten K10 ダッシュボード: {kasten_dashboard}[こちら^]  
 
-Your credentials for both are:
+両方の認証情報は以下の通りです。
 
-* *User:* {user}
-* *Password:* {password}
+* *ユーザー:* {user}  
+* *パスワード:* {password}  
 
-=== Important information about your User
+=== ユーザーに関する重要事項
 
 ====
 [NOTE]
 
-All screenshots in the following lab guides reference *user1*. Please make sure to follow the *text* to ensure you use the correct user that has been assigned to you!
+以降のラボガイドに掲載されているスクリーンショットでは、*user1* が参照されています。  
+必ず *本文* の記載に従い、割り当てられた正しいユーザーを使用してください。
 ====
