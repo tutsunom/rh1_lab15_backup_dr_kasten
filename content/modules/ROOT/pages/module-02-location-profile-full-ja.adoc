@@ -85,7 +85,6 @@ oc describe objectbucketclaim -n backuptarget-{user} kastenbackups-{user}
 ----
 
 oc get secret -n backuptarget-{user} kastenbackups-{user} \
-
   -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 --decode && echo
 
 ----
@@ -100,7 +99,6 @@ oc get secret -n backuptarget-{user} kastenbackups-{user} \
 ----
 
 oc get secret -n backuptarget-{user} kastenbackups-{user} \
-
  -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 --decode && echo
 
 ----
@@ -196,7 +194,7 @@ image::module-02-location-profile/06.png[]
 ====
 [NOTE]
 
-Profile API オブジェクトの完全な仕様については、https://docs.kasten.io/latest/api/profiles.html[docs.kasten.io] を参照してください。
+Profile API オブジェクトの完全な仕様については、 https://docs.kasten.io/latest/api/profiles.html[docs.kasten.io] を参照してください。
 ====
 
 
