@@ -1,0 +1,53 @@
+= Welcome to {lab_name}!
+
+== Introduction
+
+OpenShift Virtualization enables you to bring virtual machines onto a modern, Kubernetes-based infrastructure. It enables the development and delivery of new applications as well as the modernization of existing ones and can create applications that consist of virtual machines, containers, and serverless functions - all managed together using Kubernetes-native tools and paradigms.
+
+In this lab we will explore disaster recovery, backup and restore of Virtual Machines using the Veeam Kasten K10 product.
+
+== What Content Is Covered In The Lab?
+
+These are the *five* main sections that will be covered:
+
+* _Installing Veeam Kasten_: In this section we will provide a review of how to install the product on any OpenShift cluster. Since the product is already installed in the lab environment this sectionwill be a review only.
+
+* _Creating Location Profiles_: In this section, we will use setup the Kasten K10 product with a location profile to specify storage for the virtual machine backups.
+
+* _Protecting Virtual Machines_: In this section we will perform several backup and restore operations with virtual machines.
+
+* _Optional: Configuring Multi Cluster_: In this section you will learn how to set up Kasten Multi-Cluster Manager. Since our lab environment is a single cluster this section will be review only.
+
+* _Optional: Migrating Workloads_: This section addresses restoring backups to different clusters. Since our lab environment is a single cluster this section will be review only.
+
+== Version Information
+
+This edition of the lab has been developed using the following software versions:
+
+* Red Hat OpenShift 4.16.x
+* Red Hat OpenShift Virtualization 4.16.x
+* Veeam Kasten K10 7.0.12
+
+== Requirements for the Lab Environment
+
+* Participant needs to have their own computer with browser and internet access.
+* Chromium based browsers are recommended as some copy/paste functions don't work in Firefox for the time being.
+* Remote access console uses the US keyboard layout by default, so it's good to know where special characters reside for other country's layouts, or to use the copy/paste function in a supported browser.
+
+=== Credentials for the OpenShift Console
+
+* Your OpenShift cluster console is available {openshift_console_url}[here^].
+* Your Kasten K10 Dashboard is available {kasten_dashboard}[here^].
+
+Your credentials for both are:
+
+* *User:* {user}
+* *Password:* {password}
+
+=== Important information about your User
+
+====
+[NOTE]
+
+All screenshots in the following lab guides reference *user1*. Please make sure to follow the *text* to ensure you use the correct user that has been assigned to you!
+====
