@@ -95,7 +95,9 @@ image::module-03-backup-restore/07.png[]
 `openshift` で始まる namespace がアプリケーション一覧に表示されることがありますが、これらは OpenShift システム自身のアプリが稼働する namespace です。
 通常は一般ユーザには見せないようにすることが多いです。
 これは、K10 Operand の `spec` に `excludedApps` リストを追加することで除外できます。
+
 image::module-03-backup-restore/08.png[]
+
 以下のコマンドで `openshift` で始まる namespace の一覧を取得し、K10 Operand の YAML に貼り付けることができます。
 [source,bash,role=execute,subs="attributes"]
 ----
